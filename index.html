@@ -9,310 +9,722 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #000000; --surface: #0c0c10; --surface2: #121218; --surface3: #1a1a24;
-      --border: rgba(255,120,40,0.2); --border-hot: rgba(255,120,40,0.7);
-      --accent: #ff7828; --accent2: #ffaa55; --accent3: #ff5500;
-      --text: #eef0ff; --text-dim: #8890aa; --text-muted: #44475a;
-      --ict: #38b6ff; --security: #ff4466; --pava: #a855f7;
-      --electrical: #f59e0b; --mechanical: #10b981; --hvac: #0ea5e9; --firefighting: #ef4444;
+      --bg: #000000;
+      --surface: #0c0c10;
+      --surface2: #121218;
+      --surface3: #1a1a24;
+      --border: rgba(255,120,40,0.2);
+      --accent: #ff7828;
+      --accent2: #ffaa55;
+      --accent3: #ff5500;
+      --text: #eef0ff;
+      --text-dim: #8890aa;
+      --text-muted: #44475a;
+      --ict: #38b6ff;
+      --security: #ff4466;
+      --pava: #a855f7;
+      --electrical: #f59e0b;
+      --mechanical: #10b981;
+      --hvac: #0ea5e9;
+      --firefighting: #ef4444;
+      --ict-disc: #38b6ff;
       --success: #00e5a0;
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); font-family: 'Exo 2', sans-serif; color: var(--text); min-height: 100vh; overflow-x: hidden; }
-    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(255,120,40,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,120,40,0.04) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
-    body::after { content: ''; position: fixed; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,80,0,0.06) 0%, transparent 70%); pointer-events: none; z-index: 0; }
-    #appRoot { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; min-height: 100vh; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    body {
+      background: var(--bg);
+      font-family: 'Exo 2', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,120,40,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,120,40,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none; z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,80,0,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    #appRoot {
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto;
+      padding: 2rem 1.5rem; min-height: 100vh;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    .home-header { text-align: center; padding: 3rem 0 2rem; animation: fadeUp 0.6s ease both; }
-    .home-logo { display: inline-flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; }
+    /* ── HOME HEADER ── */
+    .home-header {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .home-logo {
+      display: inline-flex; align-items: center;
+      gap: 16px; margin-bottom: 1.5rem;
+    }
     .logo-hexagon { width: 64px; height: 64px; position: relative; display: flex; align-items: center; justify-content: center; }
     .logo-hexagon svg { width: 64px; height: 64px; }
-    .home-title { font-family: 'Rajdhani', sans-serif; font-size: 3.2rem; font-weight: 700; letter-spacing: 0.08em; background: linear-gradient(135deg, #ff7828 0%, #ffaa55 50%, #ff5500 100%); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; text-transform: uppercase; }
-    .home-sub { font-family: 'Space Mono', monospace; font-size: 0.75rem; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-top: 0.5rem; }
-    .home-divider { display: flex; align-items: center; gap: 16px; margin: 2rem auto; max-width: 400px; }
-    .home-divider::before, .home-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
-    .home-divider span { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent); letter-spacing: 0.2em; }
+    .home-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 3.2rem; font-weight: 700;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #ff7828 0%, #ffaa55 50%, #ff5500 100%);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent; line-height: 1; text-transform: uppercase;
+    }
+    .home-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem; letter-spacing: 0.25em;
+      color: var(--text-dim); text-transform: uppercase; margin-top: 0.5rem;
+    }
+    .home-divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 2rem auto; max-width: 400px;
+    }
+    .home-divider::before, .home-divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .home-divider span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; color: var(--accent); letter-spacing: 0.2em;
+    }
 
-    .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 1rem 0 3rem; }
+    /* ── CATEGORY / DISCIPLINE GRID ── */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem; margin: 1rem 0 3rem;
+    }
     .category-card {
-      background: var(--surface2); border-radius: 20px; padding: 2.5rem 2rem; cursor: pointer;
-      border: 1px solid var(--border); position: relative; overflow: hidden;
+      background: var(--surface2); border-radius: 20px;
+      padding: 2.5rem 2rem; cursor: pointer;
+      border: 1px solid var(--border);
+      position: relative; overflow: hidden;
       transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.3s;
       animation: fadeUp 0.5s ease both;
     }
-    .category-card:nth-child(1) { animation-delay: 0.1s; }
-    .category-card:nth-child(2) { animation-delay: 0.2s; }
-    .category-card:nth-child(3) { animation-delay: 0.3s; }
-    .category-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); transition: left 0.5s; }
+    .category-card::before {
+      content: ''; position: absolute; top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transition: left 0.5s;
+    }
     .category-card:hover::before { left: 100%; }
-    .category-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--cat-color), transparent); opacity: 0; transition: opacity 0.3s; }
+    .category-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cat-color), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
     .category-card:hover::after { opacity: 1; }
-    .category-card:hover { transform: translateY(-6px) scale(1.01); border-color: var(--cat-color); box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3); }
-    .cat-corner-glow { position: absolute; bottom: -40px; right: -40px; width: 150px; height: 150px; background: radial-gradient(circle, var(--cat-color), transparent 70%); opacity: 0.08; transition: opacity 0.3s; }
+    .category-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      border-color: var(--cat-color);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3);
+    }
+    .cat-corner-glow {
+      position: absolute; bottom: -40px; right: -40px;
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, var(--cat-color), transparent 70%);
+      opacity: 0.08; transition: opacity 0.3s;
+    }
     .category-card:hover .cat-corner-glow { opacity: 0.15; }
-
-    /* CAT TAG - uses inline color from style attribute */
-    .cat-tag { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--cat-color); text-transform: uppercase; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; }
-    .cat-tag::before { content: ''; display: inline-block; width: 20px; height: 1px; background: var(--cat-color); }
-
-    .main-icon-wrap { width: 80px; height: 80px; border-radius: 20px; background: var(--surface3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; position: relative; transition: border-color 0.3s; }
+    .cat-tag {
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.2em; color: var(--cat-color);
+      text-transform: uppercase; margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .cat-tag::before {
+      content: ''; display: inline-block; width: 20px; height: 1px;
+      background: var(--cat-color);
+    }
+    .main-icon-wrap {
+      width: 80px; height: 80px; border-radius: 20px;
+      background: var(--surface3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem; transition: border-color 0.3s;
+    }
     .category-card:hover .main-icon-wrap { border-color: var(--cat-color); }
     .main-icon-wrap i { font-size: 2rem; color: var(--cat-color); }
     .main-icon-wrap svg { width: 40px; height: 40px; }
-    .cat-title { font-family: 'Rajdhani', sans-serif; font-size: 1.7rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); margin-bottom: 0.3rem; }
+    .cat-title {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.7rem;
+      font-weight: 700; letter-spacing: 0.04em;
+      color: var(--text); margin-bottom: 0.3rem;
+    }
     .cat-desc { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem; }
-
-    /* SUB ICONS - uses inline color from style attribute */
     .sub-icons { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-    .sub-icon { width: 36px; height: 36px; background: var(--surface3); border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--cat-color); font-size: 0.85rem; transition: all 0.2s; opacity: 0.6; }
-    .category-card:hover .sub-icon { border-color: var(--cat-color); opacity: 1; background: rgba(0,0,0,0.3); }
+    .sub-icon {
+      width: 36px; height: 36px; background: var(--surface3);
+      border-radius: 10px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--cat-color); font-size: 0.85rem;
+      transition: all 0.2s; opacity: 0.6;
+    }
+    .category-card:hover .sub-icon {
+      border-color: var(--cat-color); opacity: 1; background: rgba(0,0,0,0.3);
+    }
 
-    /* LOGIN MODAL */
-    .login-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
-    .login-modal { background: var(--surface2); border: 1px solid var(--border); border-radius: 24px; padding: 2.5rem 2rem; width: 100%; max-width: 420px; position: relative; animation: fadeUp 0.4s ease; box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 40px rgba(255,120,40,0.1); }
-    .login-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--modal-color, var(--accent)), transparent); border-radius: 24px 24px 0 0; }
-    .login-header { text-align: center; margin-bottom: 2rem; }
-    .login-icon { width: 72px; height: 72px; background: var(--surface3); border: 1px solid var(--border); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem; font-size: 2rem; color: var(--modal-color, var(--accent)); }
-    .login-title { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); margin-bottom: 0.3rem; }
-    .login-subtitle { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; }
-    .login-input-group { margin-bottom: 1.2rem; }
-    .login-input-group label { display: block; font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-    .login-input { width: 100%; padding: 14px 18px; background: var(--surface3); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-    .login-input:focus { border-color: var(--modal-color, var(--accent)); box-shadow: 0 0 0 3px rgba(255,120,40,0.1); }
-    .login-input::placeholder { color: var(--text-muted); }
-    .login-btn { width: 100%; background: var(--modal-color, var(--accent)); color: #000; border: none; padding: 14px 28px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; margin-top: 0.5rem; transition: all 0.2s; text-transform: uppercase; }
-    .login-btn:hover { filter: brightness(1.2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,120,40,0.3); }
-    .login-btn:active { transform: translateY(0); }
-    .login-error { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--security); text-align: center; margin-top: 1rem; padding: 8px 12px; background: rgba(255,68,102,0.08); border: 1px solid rgba(255,68,102,0.2); border-radius: 8px; display: none; }
-    .login-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; background: var(--surface3); border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); cursor: pointer; font-size: 1rem; transition: all 0.2s; }
-    .login-close:hover { border-color: var(--security); color: var(--security); }
-
+    /* ── PACKAGE VIEW ── */
     .package-wrap { animation: fadeIn 0.3s ease; }
-    .pkg-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .pkg-header {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 1rem; margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+    }
     .pkg-title-row { display: flex; align-items: center; gap: 1rem; }
-    .pkg-icon-box { width: 52px; height: 52px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-    .pkg-icon-box.ict { color: var(--ict); border-color: rgba(56,182,255,0.3); }
-    .pkg-icon-box.sec { color: var(--security); border-color: rgba(255,68,102,0.3); }
-    .pkg-icon-box.pava { color: var(--pava); border-color: rgba(168,85,247,0.3); }
-    .pkg-icon-box.elec { color: var(--electrical); border-color: rgba(245,158,11,0.3); }
-    .pkg-icon-box.hvac { color: var(--hvac); border-color: rgba(14,165,233,0.3); }
-    .pkg-icon-box.fire { color: var(--firefighting); border-color: rgba(239,68,68,0.3); }
-    .pkg-name { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: 0.04em; }
-    .pkg-count { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.1em; }
-    .back-btn { background: var(--surface2); border: 1px solid var(--border); padding: 10px 20px; border-radius: 50px; font-family: 'Exo 2', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-dim); transition: all 0.2s; }
+    .pkg-icon-box {
+      width: 52px; height: 52px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .pkg-name {
+      font-family: 'Rajdhani', sans-serif; font-size: 2rem;
+      font-weight: 700; letter-spacing: 0.04em;
+    }
+    .pkg-count {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--text-dim); letter-spacing: 0.1em;
+    }
+    .back-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 50px;
+      font-family: 'Exo 2', sans-serif; font-weight: 600;
+      font-size: 0.85rem; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-dim); transition: all 0.2s;
+    }
     .back-btn:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent2); }
-    .tool-icons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2rem; }
-    .tool-icon-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1); position: relative; overflow: hidden; animation: fadeUp 0.4s ease both; --card-color: var(--accent); }
-    .tool-icon-card:hover { transform: translateY(-5px) scale(1.02); border-color: var(--card-color); background: var(--surface3); box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,0,0,0.15); }
-    .tool-big-icon { font-size: 2.4rem; margin-bottom: 1rem; height: 64px; display: flex; align-items: center; justify-content: center; color: var(--card-color); }
-    .tool-icon-card h3 { font-family: 'Exo 2', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.3; }
-    .tool-icon-card .tool-arrow { position: absolute; bottom: 12px; right: 16px; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; }
+
+    /* ── TOOL ICON GRID ── */
+    .tool-icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+    .tool-icon-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem 1.5rem;
+      text-align: center; cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative; overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+      --card-color: var(--accent);
+    }
+    .tool-icon-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: var(--card-color);
+      background: var(--surface3);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    }
+    .tool-big-icon {
+      font-size: 2.4rem; margin-bottom: 1rem;
+      height: 64px; display: flex; align-items: center;
+      justify-content: center; color: var(--card-color);
+    }
+    .tool-icon-card h3 {
+      font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+      font-weight: 600; color: var(--text); line-height: 1.3;
+    }
+    .tool-icon-card .tool-arrow {
+      position: absolute; bottom: 12px; right: 16px;
+      font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s;
+    }
     .tool-icon-card:hover .tool-arrow { color: var(--card-color); transform: translateX(3px); }
+
+    /* ── TOOL LOADER PAGE ── */
     .tool-container { animation: fadeIn 0.3s ease; }
-    .tool-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .tool-header {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 1rem; margin-bottom: 2rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+    }
     .tool-title-row { display: flex; align-items: center; gap: 12px; }
-    .tool-title-icon { width: 44px; height: 44px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--accent); }
-    .tool-title-text { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.04em; }
-    .tool-body { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; }
-    .ext-loader-bar { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin-bottom: 2rem; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; }
-    .ext-loader-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+    .tool-title-icon {
+      width: 44px; height: 44px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: var(--accent);
+    }
+    .tool-title-text {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.6rem;
+      font-weight: 700; letter-spacing: 0.04em;
+    }
+    .tool-body {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3rem 2rem; text-align: center;
+    }
+    .tool-body-icon {
+      font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--text-muted);
+    }
+    .tool-body-label {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      letter-spacing: 0.18em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 2.5rem;
+    }
+
+    /* ── EXTERNAL LOADER ── */
+    .ext-loader-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 18px;
+      flex-wrap: wrap; max-width: 800px; margin: 0 auto;
+    }
+    .ext-loader-label {
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.15em; color: var(--text-dim);
+      text-transform: uppercase; white-space: nowrap;
+      display: flex; align-items: center; gap: 8px;
+    }
     .ext-loader-label i { color: var(--accent); }
-    .ext-loader-input { flex: 1; min-width: 200px; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.75rem; outline: none; transition: border-color 0.2s; }
+    .ext-loader-input {
+      flex: 1; min-width: 200px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 14px; color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: 0.75rem;
+      outline: none; transition: border-color 0.2s;
+    }
     .ext-loader-input:focus { border-color: var(--accent); }
     .ext-loader-input::placeholder { color: var(--text-muted); }
-    .ext-loader-btn { background: var(--accent); color: #000; border: none; padding: 9px 20px; border-radius: 8px; font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .ext-loader-btn {
+      background: var(--accent); color: #000; border: none;
+      padding: 9px 20px; border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif; font-size: 0.95rem;
+      font-weight: 700; letter-spacing: 0.06em; cursor: pointer;
+      white-space: nowrap; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
     .ext-loader-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-    .ext-loader-file-btn { background: var(--surface3); color: var(--text-dim); border: 1px solid var(--border); padding: 9px 16px; border-radius: 8px; font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .ext-loader-file-btn {
+      background: var(--surface2); color: var(--text-dim);
+      border: 1px solid var(--border); padding: 9px 16px;
+      border-radius: 8px; font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      white-space: nowrap; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
     .ext-loader-file-btn:hover { border-color: var(--accent); color: var(--accent2); }
-    .ext-tool-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; align-items: stretch; justify-content: stretch; animation: fadeIn 0.2s ease; }
-    .ext-tool-frame-wrap { position: relative; flex: 1; display: flex; flex-direction: column; }
-    .ext-tool-topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
-    .ext-tool-name { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
-    .ext-tool-name i { opacity: 0.7; }
-    .ext-close-btn { background: var(--surface3); border: 1px solid var(--border); color: var(--text-dim); padding: 6px 16px; border-radius: 6px; font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .ext-loader-error {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--security); letter-spacing: 0.08em;
+      padding: 6px 10px; background: rgba(255,68,102,0.08);
+      border: 1px solid rgba(255,68,102,0.2); border-radius: 6px;
+      display: none; width: 100%; margin-top: 4px;
+    }
+
+    /* ── IFRAME MODAL ── */
+    .ext-tool-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.95); z-index: 1000;
+      display: flex; align-items: stretch; justify-content: stretch;
+      animation: fadeIn 0.2s ease;
+    }
+    .ext-tool-frame-wrap {
+      position: relative; flex: 1; display: flex; flex-direction: column;
+    }
+    .ext-tool-topbar {
+      display: flex; align-items: center;
+      justify-content: space-between; padding: 10px 18px;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      gap: 12px; flex-wrap: wrap;
+    }
+    .ext-tool-name {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ext-close-btn {
+      background: var(--surface3); border: 1px solid var(--border);
+      color: var(--text-dim); padding: 6px 16px; border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif; font-size: 0.9rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
     .ext-close-btn:hover { border-color: var(--security); color: var(--security); }
-    .ext-tool-iframe { flex: 1; border: none; width: 100%; background: #000; }
-    .ext-loader-error { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--security); letter-spacing: 0.08em; padding: 6px 10px; background: rgba(255,68,102,0.08); border: 1px solid rgba(255,68,102,0.2); border-radius: 6px; display: none; width: 100%; margin-top: 4px; }
-    .footer { text-align: center; padding: 3rem 0 2rem; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; }
+    .ext-tool-iframe { flex: 1; border: none; width: 100%; background: #fff; }
+
+    /* ── LOGIN MODAL ── */
+    .login-modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; animation: fadeIn 0.2s ease;
+    }
+    .login-modal {
+      position: relative;
+      background: var(--surface2); border: 1px solid var(--login-color);
+      border-radius: 22px; padding: 2.6rem 2.2rem 2.2rem;
+      max-width: 380px; width: 100%; text-align: center;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 30px 80px rgba(0,0,0,0.6), 0 0 50px color-mix(in srgb, var(--login-color) 25%, transparent);
+      animation: fadeUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .login-modal.shake { animation: shakeX 0.4s ease; }
+    @keyframes shakeX {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+    .login-close-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface3); border: 1px solid var(--border);
+      color: var(--text-dim); cursor: pointer; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .login-close-btn:hover { border-color: var(--security); color: var(--security); }
+    .login-modal-icon {
+      width: 64px; height: 64px; margin: 0 auto 1.2rem;
+      background: var(--surface3); border: 1px solid var(--login-color);
+      border-radius: 18px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; color: var(--login-color);
+    }
+    .login-modal-title {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;
+      font-weight: 700; letter-spacing: 0.03em; color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .login-modal-sub {
+      font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.8rem;
+    }
+    .login-field { text-align: left; margin-bottom: 1.1rem; }
+    .login-field label {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'Space Mono', monospace; font-size: 0.62rem;
+      letter-spacing: 0.12em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .login-field label i { color: var(--login-color); }
+    .login-field input {
+      width: 100%; background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 14px; color: var(--text);
+      font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .login-field input:focus { border-color: var(--login-color); }
+    .login-field input::placeholder { color: var(--text-muted); }
+    .login-error {
+      display: none; font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--security); background: rgba(255,68,102,0.08);
+      border: 1px solid rgba(255,68,102,0.25); border-radius: 8px;
+      padding: 8px 12px; margin-bottom: 1rem; text-align: left;
+    }
+    .login-submit-btn {
+      width: 100%; background: var(--login-color); color: #000;
+      border: none; padding: 12px; border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+      font-weight: 700; letter-spacing: 0.05em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; margin-top: 0.3rem;
+    }
+    .login-submit-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+    /* ── MEP HOME BUTTON ── */
+    .mep-home-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,120,40,0.08);
+      border: 1px solid rgba(255,120,40,0.45);
+      color: var(--accent); font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.12em;
+      padding: 7px 18px; border-radius: 6px;
+      cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+    }
+    .mep-home-btn:hover { background: rgba(255,120,40,0.15); border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; padding: 3rem 0 2rem;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase;
+    }
     .footer span { color: var(--accent); animation: blink 2s ease infinite; }
-    .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 2rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text-muted); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 2rem;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+    }
     .breadcrumb .sep { color: var(--accent); }
     .breadcrumb .current { color: var(--text-dim); }
     .breadcrumb .bread-link { cursor: pointer; transition: color 0.2s; }
     .breadcrumb .bread-link:hover { color: var(--accent2); }
-    .status-bar { display: flex; align-items: center; gap: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; margin-bottom: 2rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: blink 1.5s ease infinite; }
-    .status-text { color: var(--text-dim); letter-spacing: 0.1em; }
-    @media (max-width: 700px) { .category-grid { grid-template-columns: 1fr; } .tool-icons-grid { grid-template-columns: 1fr 1fr; } .home-title { font-size: 2.2rem; } .login-modal { margin: 1rem; padding: 2rem 1.5rem; } }
-    @media (max-width: 480px) { .tool-icons-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .category-grid { grid-template-columns: 1fr; }
+      .tool-icons-grid { grid-template-columns: 1fr 1fr; }
+      .home-title { font-size: 2.2rem; }
+    }
+    @media (max-width: 480px) {
+      .tool-icons-grid { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
 <div id="appRoot"></div>
 <script>
+const app = document.getElementById('appRoot');
 
-// ─── SECURITY SVG ICON ─────────────────────────────────────
-const securitySVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="24,4 42,12 42,28 24,44 6,28 6,12" fill="none" stroke="#ff4466" stroke-width="2"/>
-  <polygon points="24,10 36,16 36,28 24,38 12,28 12,16" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.4)" stroke-width="1"/>
-  <circle cx="24" cy="22" r="6" fill="none" stroke="#ff4466" stroke-width="1.5"/>
-  <circle cx="24" cy="22" r="2" fill="#ff4466"/>
-  <line x1="24" y1="10" x2="24" y2="16" stroke="#ff4466" stroke-width="1.5"/>
-  <line x1="24" y1="28" x2="24" y2="38" stroke="#ff4466" stroke-width="1"/>
-</svg>`;
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
 
-// ─── LOGIN CREDENTIALS ─────────────────────────────────────
-const loginCredentials = {
-  electrical: { email: 'ELEC.MEP@sshic.com', password: 'Elec#1111$', color: '#f59e0b', icon: 'fa-bolt', title: 'Electrical Design Tools' },
-  mechanical: { email: 'MECH.MEP@sshic.com', password: 'Mech#2222$', color: '#10b981', icon: 'fa-wind', title: 'Mechanical Design Tools' },
-  ict: { email: 'ICT.MEP@sshic.com', password: 'ICT#3333$', color: '#38b6ff', icon: 'fa-network-wired', title: 'ICT Design Tools' }
-};
-
-// ─── DATA STRUCTURES ───────────────────────────────────────
 const disciplines = [
   {
-    id: 'electrical', tag: 'POWER & LIGHTING SYSTEMS', title: 'Electrical Design Tools', desc: 'Load schedules, single-line diagrams & lighting',
-    color: '#f59e0b', iconHtml: '<i class="fas fa-bolt"></i>', subIcons: ['fa-lightbulb','fa-plug-circle-bolt','fa-table-cells','fa-cloud-bolt'],
+    id: 'electrical',
+    tag: 'POWER & LIGHTING SYSTEMS',
+    title: 'Electrical Design Tools',
+    desc: 'Load schedules, single-line diagrams & lighting',
+    color: 'var(--electrical)',
+    iconHtml: '<i class="fas fa-bolt"></i>',
+    subIcons: ['fa-lightbulb','fa-plug-circle-bolt','fa-table-cells','fa-cloud-bolt'],
+    auth: { email: 'ELEC.MEP@sshic.com', password: 'Elec#1111$' },
     tools: [
-      { name:'Lighting System Design Tools', icon:'fas fa-lightbulb', toolId:'lighting' },
-      { name:'Power System Analysis Tools', icon:'fas fa-plug-circle-bolt', toolId:'power' },
-      { name:'Panel SLD Design Tools', icon:'fas fa-table-cells', toolId:'panel-sld' },
-      { name:'Earthing / Lightning Protection', icon:'fas fa-cloud-bolt', toolId:'earthing' }
+      { name:'Lighting System Design Tools',                         icon:'fas fa-lightbulb',        toolId:'lighting'  },
+      { name:'Power System Analysis Tools',                          icon:'fas fa-plug-circle-bolt', toolId:'power'     },
+      { name:'Panel SLD Design Tools',                               icon:'fas fa-table-cells',      toolId:'panel-sld' },
+      { name:'Earthing / Lightning Protection Systems Design Tools', icon:'fas fa-cloud-bolt',       toolId:'earthing'  }
     ]
   },
   {
-    id: 'mechanical', tag: 'HVAC & PLUMBING SYSTEMS', title: 'Mechanical Design Tools', desc: 'HVAC loads, duct sizing & pipe flow',
-    color: '#10b981', iconHtml: '<i class="fas fa-wind"></i>', subIcons: ['fa-temperature-half','fa-gauge','fa-droplet'],
-    packages: [
-      { id: 'hvac', tag: 'HVAC SYSTEMS', title: 'HVAC Systems', desc: 'Load calculation, energy analysis & duct distribution', icon: '<i class="fas fa-wind"></i>', color: '#0ea5e9', subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line'],
-        tools: [
-          { name:'HVAC Load Calculation & Energy Analysis', icon:'fas fa-temperature-arrow-up', toolId:'hvac-load' },
-          { name:'Duct Sizing & Air Distribution', icon:'fas fa-arrows-left-right-to-line', toolId:'duct-sizing' }
-        ]},
-      { id: 'firefighting', tag: 'FIRE FIGHTING & PLUMBING', title: 'Fire Fighting & Plumbing', desc: 'Sprinkler coverage & pipe pressure drop analysis', icon: '<i class="fas fa-fire-extinguisher"></i>', color: '#ef4444', subIcons: ['fa-shower','fa-gauge-high'],
-        tools: [
-          { name:'Sprinkler Spacing & Coverage', icon:'fas fa-shower', toolId:'sprinkler' },
-          { name:'Pipe Pressure Drop', icon:'fas fa-gauge-high', toolId:'pipe-pressure' }
-        ]}
-    ]
+    id: 'mechanical',
+    tag: 'HVAC & PLUMBING SYSTEMS',
+    title: 'Mechanical Design Tools',
+    desc: 'HVAC loads, duct sizing & pipe flow',
+    color: 'var(--mechanical)',
+    iconHtml: '<i class="fas fa-wind"></i>',
+    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line','fa-shower','fa-gauge-high'],
+    auth: { email: 'MECH.MEP@sshic.com', password: 'Mech#2222$' },
   },
   {
-    id: 'ict', tag: 'NETWORKS, SECURITY & AV', title: 'ICT Design Tools', desc: 'ICT, Security & PA/AV engineering toolkits',
-    color: '#38b6ff', iconHtml: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect x="6" y="10" width="36" height="24" rx="3" fill="none" stroke="#38b6ff" stroke-width="2"/><line x1="6" y1="18" x2="42" y2="18" stroke="#38b6ff" stroke-width="1.5" stroke-dasharray="3,2"/><circle cx="14" cy="14" r="2" fill="#38b6ff"/><circle cx="20" cy="14" r="2" fill="rgba(56,182,255,0.4)"/><line x1="24" y1="34" x2="24" y2="40" stroke="#38b6ff" stroke-width="2"/><line x1="16" y1="40" x2="32" y2="40" stroke="#38b6ff" stroke-width="2"/><text x="24" y="30" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="10" font-weight="700" fill="#38b6ff">ICT</text></svg>`,
+    id: 'ict',
+    tag: 'NETWORKS, SECURITY & AV',
+    title: 'ICT Design Tools',
+    desc: 'ICT, Security & PA/AV engineering toolkits',
+    color: 'var(--ict-disc)',
+    iconHtml: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+      <rect x="6" y="10" width="36" height="24" rx="3" fill="none" stroke="#38b6ff" stroke-width="2"/>
+      <line x1="6" y1="18" x2="42" y2="18" stroke="#38b6ff" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <circle cx="14" cy="14" r="2" fill="#38b6ff"/>
+      <circle cx="20" cy="14" r="2" fill="rgba(56,182,255,0.4)"/>
+      <line x1="24" y1="34" x2="24" y2="40" stroke="#38b6ff" stroke-width="2"/>
+      <line x1="16" y1="40" x2="32" y2="40" stroke="#38b6ff" stroke-width="2"/>
+      <text x="24" y="30" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="10" font-weight="700" fill="#38b6ff">ICT</text>
+    </svg>`,
     subIcons: ['fa-network-wired','fa-shield-halved','fa-music'],
-    packages: [
-      { id: 'ict', tag: 'NETWORK & INFRASTRUCTURE', title: 'ICT TOOLS', desc: 'Bandwidth, thermal & Wi-Fi analysis', icon: '<i class="fas fa-network-wired"></i>', color: '#38b6ff', subIcons: ['fa-tachometer-alt','fa-temperature-high','fa-wifi','fa-server','fa-diagram-project'],
-        tools: [
-          { name:'Bandwidth Calculator', icon:'fas fa-tachometer-alt', toolId:'bandwidth' },
-          { name:'Thermal / Heat Load Calculator', icon:'fas fa-temperature-high', toolId:'thermal' },
-          { name:'Wi-Fi Heatmap Visualizations', icon:'fas fa-wifi', toolId:'wifi' },
-          { name:'Telecom Room Design', icon:'fas fa-server', toolId:'telecom' },
-          { name:'Schematic Diagram Drawing', icon:'fas fa-diagram-project', toolId:'schematic' }
-        ]},
-      { id: 'security', tag: 'SURVEILLANCE & CONTROL', title: 'SECURITY TOOLS', desc: 'CCTV coverage & control room layout', icon: securitySVG, color: '#ff4466', subIcons: ['fa-video','fa-camera-rotate','fa-desktop'],
-        tools: [
-          { name:'CCTV FOV Drawing Tool', icon:'fas fa-video', toolId:'cctv' },
-          { name:'Video Installation & Tilt Analyzer', icon:'fas fa-camera-rotate', toolId:'tilt-analyzer' },
-          { name:'Control Room Design Tool', icon:'fas fa-desktop', toolId:'controlroom' }
-        ]},
-      { id: 'pava', tag: 'AUDIO & VISUAL SYSTEMS', title: 'PA/AV TOOLS', desc: 'Sound, screen & projection design', icon: '<i class="fas fa-chalkboard-user"></i>', color: '#a855f7', subIcons: ['fa-music','fa-tv','fa-film'],
-        tools: [
-          { name:'Sound System Design Tool', icon:'fas fa-music', toolId:'sound' },
-          { name:'Screen Size Calculator', icon:'fas fa-tv', toolId:'screen' },
-          { name:'Projector Design Tool', icon:'fas fa-film', toolId:'projector' }
-        ]}
+    auth: { email: 'ICT.MEP@sshic.com', password: 'ICT#3333$' },
+  }
+];
+
+const mechPackages = [
+  {
+    id: 'hvac',
+    tag: 'HVAC SYSTEMS',
+    title: 'HVAC Systems',
+    desc: 'Load calculation, energy analysis & duct distribution',
+    icon: '<i class="fas fa-wind"></i>',
+    color: 'var(--hvac)',
+    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line'],
+    tools: [
+      { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-arrow-up',         toolId:'hvac-load'   },
+      { name:'Duct Sizing & Air Distribution Design Tool',          icon:'fas fa-arrows-left-right-to-line',    toolId:'duct-sizing' }
+    ]
+  },
+  {
+    id: 'firefighting',
+    tag: 'FIRE FIGHTING & PLUMBING SYSTEMS',
+    title: 'Fire Fighting & Plumbing',
+    desc: 'Sprinkler hydraulics, agent systems & sanitary design',
+    icon: '<i class="fas fa-fire-extinguisher"></i>',
+    color: 'var(--firefighting)',
+    subIcons: ['fa-shower','fa-shield-halved','fa-droplet'],
+    tools: [
+      { name:'Fire Sprinkler Network Design Tool', icon:'fas fa-shower',         toolId:'sprinkler'    },
+      { name:'Agent Pro Design Tool',             icon:'fas fa-shield-halved',  toolId:'agent-pro'    },
+      { name:'Hydro‑Sanitary Design Tool',        icon:'fas fa-droplet',        toolId:'hydro-sanit'  }
     ]
   }
 ];
 
-const app = document.getElementById('appRoot');
+const ictCategories = [
+  {
+    id: 'ict',
+    tag: 'NETWORK & INFRASTRUCTURE',
+    title: 'ICT TOOLS',
+    desc: 'Bandwidth, thermal & Wi-Fi analysis',
+    color: 'var(--ict)',
+    icon: '<i class="fas fa-network-wired"></i>',
+    iconClass: 'ict',
+    subIcons: ['fa-tachometer-alt','fa-temperature-high','fa-wifi','fa-server','fa-diagram-project'],
+    tools: [
+      { name:'Bandwidth Calculator',              icon:'fas fa-tachometer-alt',  toolId:'bandwidth' },
+      { name:'Thermal / Heat Load Calculator',    icon:'fas fa-temperature-high',toolId:'thermal'   },
+      { name:'Wi-Fi Heatmap Visualizations Tool', icon:'fas fa-wifi',            toolId:'wifi'      },
+      { name:'Telecom Room Design',               icon:'fas fa-server',          toolId:'telecom'   },
+      { name:'Schematic Diagram Drawing Tool',    icon:'fas fa-diagram-project', toolId:'schematic' }
+    ]
+  },
+  {
+    id: 'security',
+    tag: 'SURVEILLANCE & CONTROL',
+    title: 'SECURITY TOOLS',
+    desc: 'CCTV coverage & control room layout',
+    color: 'var(--security)',
+    icon: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="24,4 42,12 42,28 24,44 6,28 6,12" fill="none" stroke="#ff4466" stroke-width="2"/>
+      <polygon points="24,10 36,16 36,28 24,38 12,28 12,16" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.4)" stroke-width="1"/>
+      <circle cx="24" cy="22" r="6" fill="none" stroke="#ff4466" stroke-width="1.5"/>
+      <circle cx="24" cy="22" r="2" fill="#ff4466"/>
+      <line x1="24" y1="10" x2="24" y2="16" stroke="#ff4466" stroke-width="1.5"/>
+      <line x1="24" y1="28" x2="24" y2="38" stroke="#ff4466" stroke-width="1"/>
+    </svg>`,
+    iconClass: 'sec',
+    subIcons: ['fa-video','fa-camera-rotate','fa-desktop'],
+    tools: [
+      { name:'CCTV FOV Drawing Tool',                               icon:'fas fa-video',         toolId:'cctv'          },
+      { name:'Video Installation & Surveillance Tilt Analyzer Tool',icon:'fas fa-camera-rotate', toolId:'tilt-analyzer' },
+      { name:'Control Room Design Tool',                            icon:'fas fa-desktop',       toolId:'controlroom'   }
+    ]
+  },
+  {
+    id: 'pava',
+    tag: 'AUDIO & VISUAL SYSTEMS',
+    title: 'PA/AV TOOLS',
+    desc: 'Sound, screen & projection design',
+    color: 'var(--pava)',
+    icon: '<i class="fas fa-chalkboard-user"></i>',
+    iconClass: 'pava',
+    subIcons: ['fa-music','fa-tv','fa-film'],
+    tools: [
+      { name:'Sound System Design Tool',    icon:'fas fa-music', toolId:'sound'     },
+      { name:'Screen Size Calculator Tool', icon:'fas fa-tv',    toolId:'screen'    },
+      { name:'Projector Design Tool',       icon:'fas fa-film',  toolId:'projector' }
+    ]
+  }
+];
 
-// ─── LOGIN MODAL ───────────────────────────────────────────
-function showLoginModal(discId) {
-  const creds = loginCredentials[discId];
-  const modalOverlay = document.createElement('div');
-  modalOverlay.className = 'login-modal-overlay';
-  modalOverlay.id = 'loginModalOverlay';
-  modalOverlay.innerHTML = `
-    <div class="login-modal" style="--modal-color: ${creds.color};">
-      <div class="login-close" id="loginClose"><i class="fas fa-times"></i></div>
-      <div class="login-header">
-        <div class="login-icon"><i class="fas ${creds.icon}"></i></div>
-        <div class="login-title">${creds.title}</div>
-        <div class="login-subtitle">SECURE ACCESS REQUIRED</div>
-      </div>
-      <div class="login-input-group">
-        <label><i class="fas fa-envelope" style="margin-right:6px;"></i>Enter Your Mail</label>
-        <input type="text" class="login-input" id="loginEmail" value="${creds.email}" placeholder="Enter your email">
-      </div>
-      <div class="login-input-group">
-        <label><i class="fas fa-lock" style="margin-right:6px;"></i>Password</label>
-        <input type="password" class="login-input" id="loginPassword" value="${creds.password}" placeholder="Enter your password">
-      </div>
-      <button class="login-btn" id="loginSubmitBtn" style="background: ${creds.color};">
-        <i class="fas fa-right-to-bracket" style="margin-right:8px;"></i>ACCESS TOOLS
-      </button>
-      <div class="login-error" id="loginError"></div>
-    </div>`;
-  document.body.appendChild(modalOverlay);
-  document.getElementById('loginClose').addEventListener('click', () => { document.body.removeChild(modalOverlay); });
-  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) { document.body.removeChild(modalOverlay); } });
-  document.getElementById('loginSubmitBtn').addEventListener('click', () => {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const errorEl = document.getElementById('loginError');
-    if (email === creds.email && password === creds.password) {
-      document.body.removeChild(modalOverlay);
-      renderDiscipline(discId);
-    } else {
-      errorEl.textContent = '⚠ Invalid email or password. Please try again.';
-      errorEl.style.display = 'block';
-    }
-  });
-  document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('loginSubmitBtn').click(); });
-}
+// ═══════════════════════════════════════════════════════════════
+// EXTERNAL TOOL MODAL
+// ═══════════════════════════════════════════════════════════════
 
-// ─── EXTERNAL TOOL MODAL ────────────────────────────────────
 function openExternalToolModal(src, label, isBlob) {
   const modal = document.createElement('div');
   modal.className = 'ext-tool-modal';
-  let iframeSrc = ''; let blobUrl = '';
-  if (isBlob) { const blob = new Blob([src], { type: 'text/html' }); blobUrl = URL.createObjectURL(blob); iframeSrc = blobUrl; }
-  else { iframeSrc = src; }
-  const shortLabel = label.length > 60 ? '...' + label.slice(-57) : label;
-  modal.innerHTML = `<div class="ext-tool-frame-wrap"><div class="ext-tool-topbar"><span class="ext-tool-name"><i class="fas fa-file-code"></i> EXTERNAL TOOL — ${shortLabel}</span><div style="display:flex;gap:8px;align-items:center"><button class="ext-close-btn" id="extCloseBtn"><i class="fas fa-times"></i> CLOSE</button></div></div><iframe class="ext-tool-iframe" id="extToolIframe" src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups"></iframe></div>`;
+  let blobUrl = '';
+  const iframeSrc = isBlob ? (blobUrl = URL.createObjectURL(new Blob([src], {type:'text/html'}))) : src;
+  const shortLabel = label.length > 60 ? '…' + label.slice(-57) : label;
+  modal.innerHTML = `
+    <div class="ext-tool-frame-wrap">
+      <div class="ext-tool-topbar">
+        <span class="ext-tool-name"><i class="fas fa-file-code"></i> EXTERNAL TOOL &nbsp;—&nbsp; ${shortLabel}</span>
+        <button class="ext-close-btn" id="extCloseBtn"><i class="fas fa-times"></i> CLOSE</button>
+      </div>
+      <iframe class="ext-tool-iframe" src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups"></iframe>
+    </div>`;
   document.body.appendChild(modal);
-  document.getElementById('extCloseBtn').addEventListener('click', () => { document.body.removeChild(modal); if (blobUrl) URL.revokeObjectURL(blobUrl); });
-  const escHandler = (e) => { if (e.key === 'Escape') { document.body.removeChild(modal); if (blobUrl) URL.revokeObjectURL(blobUrl); document.removeEventListener('keydown', escHandler); } };
-  document.addEventListener('keydown', escHandler);
+  document.getElementById('extCloseBtn').onclick = () => {
+    document.body.removeChild(modal);
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  };
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { document.body.removeChild(modal); if (blobUrl) URL.revokeObjectURL(blobUrl); document.removeEventListener('keydown', esc); }
+  });
 }
 
-// ─── WIRE EXTERNAL LOADER ──────────────────────────────────
 function wireExtLoader() {
   const filePickBtn = document.getElementById('extFilePickBtn');
-  const filePicker = document.getElementById('extFilePicker');
-  const pathInput = document.getElementById('extPathInput');
-  const loadBtn = document.getElementById('extLoadBtn');
-  const errorEl = document.getElementById('extLoaderError');
-  filePickBtn.addEventListener('click', () => filePicker.click());
-  filePicker.addEventListener('change', (e) => {
+  const filePicker  = document.getElementById('extFilePicker');
+  const pathInput   = document.getElementById('extPathInput');
+  const loadBtn     = document.getElementById('extLoadBtn');
+  const errorEl     = document.getElementById('extLoaderError');
+  filePickBtn.onclick = () => filePicker.click();
+  filePicker.onchange = (e) => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => { pathInput.value = file.name; openExternalToolModal(ev.target.result, file.name, true); };
     reader.readAsText(file); filePicker.value = '';
-  });
-  loadBtn.addEventListener('click', () => {
+  };
+  loadBtn.onclick = () => {
     const val = pathInput.value.trim(); errorEl.style.display = 'none';
     if (!val) { errorEl.textContent = '⚠ Enter a file path or URL first.'; errorEl.style.display = 'block'; return; }
     openExternalToolModal(val, val, false);
-  });
-  pathInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
+  };
+  pathInput.onkeydown = (e) => { if (e.key === 'Enter') loadBtn.click(); };
 }
 
-// ─── RENDER HOME ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// SHARED LOADER PAGE
+// ═══════════════════════════════════════════════════════════════
+
+function loaderPage({ breadcrumbs, toolName, toolIcon, toolColor, backFn }) {
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        ${breadcrumbs.map((b, i) =>
+          i < breadcrumbs.length - 1
+            ? `<span class="bread-link" data-idx="${i}">${b.label}</span><span class="sep">›</span>`
+            : `<span class="current">${b.label}</span>`
+        ).join('')}
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${toolColor}; border-color:${toolColor}55">${toolIcon}</div>
+          <span class="tool-title-text">${toolName}</span>
+        </div>
+        <button class="back-btn" id="loaderBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+      </div>
+      <div class="tool-body">
+        <div class="tool-body-icon"><i class="fas fa-folder-open"></i></div>
+        <div class="tool-body-label">Select &amp; load the external tool file</div>
+        <div class="ext-loader-bar">
+          <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
+          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Browse or enter path / URL…">
+          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+          <span class="ext-loader-error" id="extLoaderError"></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>`;
+  document.getElementById('loaderBackBtn').onclick = backFn;
+  document.querySelectorAll('.bread-link').forEach(el => {
+    const idx = +el.getAttribute('data-idx');
+    el.onclick = breadcrumbs[idx].fn;
+  });
+  wireExtLoader();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════════════════
+
 function renderHome() {
   app.innerHTML = `
     <div class="home-header">
@@ -327,7 +739,7 @@ function renderHome() {
         </div>
       </div>
       <h1 class="home-title">MEP DESIGN PLATFORM</h1>
-      <p class="home-sub">Electrical · Mechanical · ICT Engineering Suites</p>
+      <p class="home-sub">Electrical &nbsp;·&nbsp; Mechanical &nbsp;·&nbsp; ICT Engineering Suites</p>
       <div class="home-divider"><span>SELECT DISCIPLINE</span></div>
     </div>
     <div class="category-grid">
@@ -338,42 +750,98 @@ function renderHome() {
           <div class="main-icon-wrap">${d.iconHtml}</div>
           <div class="cat-title">${d.title}</div>
           <div class="cat-desc">${d.desc}</div>
-          <div class="sub-icons">
-            ${d.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-        </div>
-      `).join('')}
+          <div class="sub-icons">${d.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-    <div class="footer"><span>■</span> MEP DESIGN PLATFORM · v3.0 · ALL SYSTEMS OPERATIONAL</div>
-  `;
-  document.querySelectorAll('.category-card').forEach(card => {
-    card.addEventListener('click', () => { showLoginModal(card.getAttribute('data-disc')); });
+    <div class="footer"><span>■</span> MEP DESIGN PLATFORM &nbsp;·&nbsp; v4.0</div>`;
+  document.querySelectorAll('[data-disc]').forEach(card => {
+    card.onclick = () => {
+      const id = card.getAttribute('data-disc');
+      const disc = disciplines.find(d => d.id === id);
+      const goTo = () => {
+        if (id === 'electrical') renderElectricalHome();
+        else if (id === 'mechanical') renderMechanicalHome();
+        else if (id === 'ict') renderICTHome();
+      };
+      openLoginModal(disc, goTo);
+    };
   });
 }
 
-// ─── RENDER DISCIPLINE ─────────────────────────────────────
-function renderDiscipline(discId) {
-  const disc = disciplines.find(d => d.id === discId);
-  if (discId === 'electrical') { renderElectricalHome(disc); }
-  else if (discId === 'mechanical') { renderMechanicalHome(disc); }
-  else if (discId === 'ict') { renderICTHome(disc); }
+function openLoginModal(disc, onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'login-modal-overlay';
+  overlay.innerHTML = `
+    <div class="login-modal" style="--login-color:${disc.color}">
+      <button class="login-close-btn" id="loginCloseBtn"><i class="fas fa-times"></i></button>
+      <div class="login-modal-icon">${disc.iconHtml}</div>
+      <div class="login-modal-title">${disc.title}</div>
+      <div class="login-modal-sub">Sign in to access this discipline</div>
+      <div class="login-field">
+        <label><i class="fas fa-envelope"></i> Enter Your Mail</label>
+        <input type="email" id="loginEmail" placeholder="name@company.com" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="off">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="login-submit-btn" id="loginSubmitBtn"><i class="fas fa-arrow-right-to-bracket"></i> SIGN IN</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const emailEl = document.getElementById('loginEmail');
+  const passEl  = document.getElementById('loginPassword');
+  const errEl   = document.getElementById('loginError');
+
+  const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+
+  const attemptLogin = () => {
+    const email = emailEl.value.trim();
+    const pass  = passEl.value;
+    if (!email || !pass) {
+      errEl.textContent = '⚠ Please enter both email and password.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (email.toLowerCase() === disc.auth.email.toLowerCase() && pass === disc.auth.password) {
+      closeModal();
+      onSuccess();
+    } else {
+      errEl.textContent = '⚠ Incorrect email or password.';
+      errEl.style.display = 'block';
+      const modal = overlay.querySelector('.login-modal');
+      modal.classList.remove('shake'); void modal.offsetWidth; modal.classList.add('shake');
+    }
+  };
+
+  document.getElementById('loginSubmitBtn').onclick = attemptLogin;
+  document.getElementById('loginCloseBtn').onclick = closeModal;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  [emailEl, passEl].forEach(el => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); }));
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', esc); }
+  });
+  setTimeout(() => emailEl.focus(), 50);
 }
 
-// ─── ELECTRICAL ────────────────────────────────────────────
-function renderElectricalHome(disc) {
+// ═══════════════════════════════════════════════════════════════
+// ELECTRICAL
+// ═══════════════════════════════════════════════════════════════
+
+function renderElectricalHome() {
+  const disc = disciplines.find(d => d.id === 'electrical');
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">ELECTRICAL DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">ELECTRICAL DESIGN TOOLS</h1>
-      <p class="home-sub">Power · Lighting · Protection Systems</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <p class="home-sub">Power &nbsp;·&nbsp; Lighting &nbsp;·&nbsp; Protection Systems</p>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT TOOL</span></div>
     </div>
@@ -383,86 +851,93 @@ function renderElectricalHome(disc) {
           <div class="tool-big-icon"><i class="${t.icon}"></i></div>
           <h3>${t.name}</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      `).join('')}
+        </div>`).join('')}
       <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${disc.tools.length*0.08}s; border-style:dashed; --card-color:var(--electrical)">
         <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
         <h3>Load External File</h3>
         <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
       </div>
     </div>
-    <div class="footer"><span>■</span> ELECTRICAL DESIGN TOOLS · SELECT A TOOL TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
+    <div class="footer"><span>■</span> ELECTRICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
   document.getElementById('btnMepHome').onclick = renderHome;
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') renderToolLoader('electrical', [{name:'Load External File', icon:'fas fa-folder-open', toolId:'__load__'}], '__load__', 'var(--electrical)', () => renderElectricalHome(disc));
-      else renderToolLoader('electrical', disc.tools, toolId, 'var(--electrical)', () => renderElectricalHome(disc));
-    });
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'<i class="fas fa-folder-open"></i>' }
+        : disc.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'ELECTRICAL DESIGN TOOLS', fn: renderElectricalHome },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: toolId === '__load__' ? '<i class="fas fa-folder-open"></i>' : `<i class="${tool.icon}"></i>`,
+        toolColor: 'var(--electrical)',
+        backFn: renderElectricalHome
+      });
+    };
   });
 }
 
-// ─── MECHANICAL ────────────────────────────────────────────
-function renderMechanicalHome(disc) {
+// ═══════════════════════════════════════════════════════════════
+// MECHANICAL
+// ═══════════════════════════════════════════════════════════════
+
+function renderMechanicalHome() {
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">MECHANICAL DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">MECHANICAL DESIGN TOOLS</h1>
-      <p class="home-sub">HVAC · Fire Fighting · Plumbing Systems</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <p class="home-sub">HVAC &nbsp;·&nbsp; Fire Fighting &nbsp;·&nbsp; Plumbing Systems</p>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT PACKAGE</span></div>
     </div>
-    <div class="category-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px,1fr))">
-      ${disc.packages.map((pkg, i) => `
-        <div class="category-card" data-mech-pkg="${pkg.id}" style="--cat-color:${pkg.color}; animation-delay:${0.1+i*0.1}s; cursor:pointer">
+    <div class="category-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      ${mechPackages.map((pkg, i) => `
+        <div class="category-card" data-mech-pkg="${pkg.id}" style="--cat-color:${pkg.color}; animation-delay:${0.1+i*0.1}s">
           <div class="cat-corner-glow"></div>
           <div class="cat-tag">${pkg.tag}</div>
-          <div class="main-icon-wrap" style="color:${pkg.color}; font-size:2rem">${pkg.icon}</div>
+          <div class="main-icon-wrap" style="color:${pkg.color}">${pkg.icon}</div>
           <div class="cat-title">${pkg.title}</div>
           <div class="cat-desc">${pkg.desc}</div>
-          <div class="sub-icons">
-            ${pkg.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-        </div>
-      `).join('')}
+          <div class="sub-icons">${pkg.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-    <div class="footer"><span>■</span> MECHANICAL DESIGN TOOLS · SELECT A PACKAGE TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
+    <div class="footer"><span>■</span> MECHANICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
   document.getElementById('btnMepHome').onclick = renderHome;
   document.querySelectorAll('[data-mech-pkg]').forEach(card => {
-    card.addEventListener('click', () => { renderMechPackage(disc, card.getAttribute('data-mech-pkg')); });
+    card.onclick = () => renderMechPackage(card.getAttribute('data-mech-pkg'));
   });
 }
 
-function renderMechPackage(disc, pkgId) {
-  const pkg = disc.packages.find(p => p.id === pkgId);
+function renderMechPackage(pkgId) {
+  const pkg = mechPackages.find(p => p.id === pkgId);
   app.innerHTML = `
     <div class="package-wrap">
       <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeMech">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrMechDisc">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrHome">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrMech">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
         <span class="current">${pkg.title.toUpperCase()}</span>
       </div>
       <div class="pkg-header">
         <div class="pkg-title-row">
-          <div class="pkg-icon-box" style="color:${pkg.color}; border-color:${pkg.color}40; background:${pkg.color}14; font-size:1.4rem">${pkg.icon}</div>
+          <div class="pkg-icon-box" style="color:${pkg.color}; border-color:${pkg.color}55; background:${pkg.color}12">${pkg.icon}</div>
           <div>
             <div class="pkg-name">${pkg.title}</div>
             <div class="pkg-count">${pkg.tools.length} TOOLS AVAILABLE</div>
           </div>
         </div>
-        <button class="back-btn" id="backMechHome"><i class="fas fa-arrow-left"></i> Mechanical Design Tools</button>
+        <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i> Mechanical Design Tools</button>
       </div>
       <div class="tool-icons-grid">
         ${pkg.tools.map((t, i) => `
@@ -470,73 +945,80 @@ function renderMechPackage(disc, pkgId) {
             <div class="tool-big-icon"><i class="${t.icon}"></i></div>
             <h3>${t.name}</h3>
             <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-          </div>
-        `).join('')}
+          </div>`).join('')}
         <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${pkg.tools.length*0.08}s; border-style:dashed; --card-color:${pkg.color}">
           <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
           <h3>Load External File</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
       </div>
-      <div class="footer"><span>■</span> ${pkg.title.toUpperCase()} · SELECT A TOOL TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backMechHome').onclick = () => renderMechanicalHome(disc);
-  document.getElementById('bcrHomeMech').onclick = renderHome;
-  document.getElementById('bcrMechDisc').onclick = () => renderMechanicalHome(disc);
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+      <div class="footer"><span>■</span> ${pkg.title.toUpperCase()} &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
+    </div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
+  document.getElementById('bcrMech').onclick = renderMechanicalHome;
+  document.getElementById('backBtn').onclick = renderMechanicalHome;
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') renderToolLoader('mechanical', [{name:'Load External File', icon:'fas fa-folder-open', toolId:'__load__'}], '__load__', pkg.color, () => renderMechPackage(disc, pkgId));
-      else renderToolLoader('mechanical', pkg.tools, toolId, pkg.color, () => renderMechPackage(disc, pkgId));
-    });
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'fas fa-folder-open' }
+        : pkg.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'MECHANICAL DESIGN TOOLS', fn: renderMechanicalHome },
+          { label: pkg.title, fn: () => renderMechPackage(pkgId) },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: `<i class="${tool.icon}"></i>`,
+        toolColor: pkg.color,
+        backFn: () => renderMechPackage(pkgId)
+      });
+    };
   });
 }
 
-// ─── ICT ───────────────────────────────────────────────────
-function renderICTHome(disc) {
+// ═══════════════════════════════════════════════════════════════
+// ICT
+// ═══════════════════════════════════════════════════════════════
+
+function renderICTHome() {
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">ICT DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">ICT DESIGN TOOLS</h1>
-      <p class="home-sub">Networks · Security · PA/AV Specialized Toolkits</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHomeICT" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <p class="home-sub">Networks &nbsp;·&nbsp; Security &nbsp;·&nbsp; PA/AV Specialized Toolkits</p>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT PACKAGE</span></div>
     </div>
     <div class="category-grid">
-      ${disc.packages.map((cat, i) => `
+      ${ictCategories.map(cat => `
         <div class="category-card" data-cat="${cat.id}" style="--cat-color:${cat.color}">
           <div class="cat-corner-glow"></div>
           <div class="cat-tag">${cat.tag}</div>
           <div class="main-icon-wrap">${cat.icon}</div>
           <div class="cat-title">${cat.title}</div>
           <div class="cat-desc">${cat.desc}</div>
-          <div class="sub-icons">
-            ${cat.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-        </div>
-      `).join('')}
+          <div class="sub-icons">${cat.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-    <div class="footer"><span>■</span> ICT DESIGN TOOLS · SELECT A PACKAGE TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
-  document.getElementById('btnMepHomeICT').onclick = renderHome;
-  document.querySelectorAll('.category-card').forEach(card => {
-    card.addEventListener('click', () => { renderICTPackage(disc, card.getAttribute('data-cat')); });
+    <div class="footer"><span>■</span> ICT DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
+  document.getElementById('btnMepHome').onclick = renderHome;
+  document.querySelectorAll('[data-cat]').forEach(card => {
+    card.onclick = () => renderICTPackage(card.getAttribute('data-cat'));
   });
 }
 
-function renderICTPackage(disc, catId) {
-  const cat = disc.packages.find(c => c.id === catId);
+function renderICTPackage(catId) {
+  const cat = ictCategories.find(c => c.id === catId);
   app.innerHTML = `
     <div class="package-wrap">
       <div class="breadcrumb">
@@ -546,13 +1028,13 @@ function renderICTPackage(disc, catId) {
       </div>
       <div class="pkg-header">
         <div class="pkg-title-row">
-          <div class="pkg-icon-box ${cat.id === 'ict' ? 'ict' : cat.id === 'security' ? 'sec' : 'pava'}">${cat.icon}</div>
+          <div class="pkg-icon-box ${cat.iconClass}" style="color:${cat.color}; border-color:${cat.color}55; background:${cat.color}12">${cat.icon}</div>
           <div>
             <div class="pkg-name">${cat.title}</div>
             <div class="pkg-count">${cat.tools.length} TOOLS AVAILABLE</div>
           </div>
         </div>
-        <button class="back-btn" id="backHomeBtn"><i class="fas fa-arrow-left"></i> ICT Design Tools</button>
+        <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i> ICT Design Tools</button>
       </div>
       <div class="tool-icons-grid">
         ${cat.tools.map((t, i) => `
@@ -560,75 +1042,43 @@ function renderICTPackage(disc, catId) {
             <div class="tool-big-icon"><i class="${t.icon}"></i></div>
             <h3>${t.name}</h3>
             <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-          </div>
-        `).join('')}
+          </div>`).join('')}
         <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${cat.tools.length*0.08}s; border-style:dashed; --card-color:${cat.color}">
           <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
           <h3>Load External File</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
       </div>
-      <div class="footer"><span>■</span> SELECT A TOOL TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backHomeBtn').onclick = () => renderICTHome(disc);
+      <div class="footer"><span>■</span> ${cat.title} &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
+    </div>`;
   document.getElementById('bcrHome').onclick = renderHome;
-  document.getElementById('bcrICT').onclick = () => renderICTHome(disc);
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+  document.getElementById('bcrICT').onclick = renderICTHome;
+  document.getElementById('backBtn').onclick = renderICTHome;
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') renderToolLoader('ict', [{name:'Load External File', icon:'fas fa-folder-open', toolId:'__load__'}], '__load__', cat.color, () => renderICTPackage(disc, catId));
-      else renderToolLoader('ict', cat.tools, toolId, cat.color, () => renderICTPackage(disc, catId));
-    });
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'fas fa-folder-open' }
+        : cat.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'ICT DESIGN TOOLS', fn: renderICTHome },
+          { label: cat.title, fn: () => renderICTPackage(catId) },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: `<i class="${tool.icon}"></i>`,
+        toolColor: cat.color,
+        backFn: () => renderICTPackage(catId)
+      });
+    };
   });
 }
 
-// ─── TOOL LOADER PAGE (GUI ONLY) ──────────────────────────
-function renderToolLoader(discId, tools, toolId, color, backFn) {
-  const tool = tools.find(t => t.toolId === toolId);
-  const discLabel = discId === 'electrical' ? 'ELECTRICAL DESIGN TOOLS' : discId === 'mechanical' ? 'MECHANICAL DESIGN TOOLS' : 'ICT DESIGN TOOLS';
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeG">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrDiscG">${discLabel}</span><span class="sep">›</span>
-        <span class="current">${tool.name.toUpperCase()}</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon" style="color:${color}; border-color:${color}40"><i class="${tool.icon}"></i></div>
-          <span class="tool-title-text">${tool.name}</span>
-        </div>
-        <button class="back-btn" id="backToDiscG"><i class="fas fa-arrow-left"></i> Back</button>
-      </div>
-      <div class="tool-body">
-        <div style="text-align:center; padding:3rem 1rem;">
-          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
-          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
-            Load your tool file to begin
-          </div>
-          <div class="ext-loader-bar" style="margin-bottom:0; max-width:700px; margin-left:auto; margin-right:auto;">
-            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
-            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${toolId}.html">
-            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-            <span class="ext-loader-error" id="extLoaderError"></span>
-          </div>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backToDiscG').onclick = backFn;
-  document.getElementById('bcrHomeG').onclick = renderHome;
-  document.getElementById('bcrDiscG').onclick = backFn;
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
-
-// ─── INIT ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 renderHome();
 </script>
 </body>
