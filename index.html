@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MEP Design Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #0c0c10;
+      --surface2: #121218;
+      --surface3: #1a1a24;
+      --border: rgba(255,120,40,0.2);
+      --border-hot: rgba(255,120,40,0.7);
+      --accent: #ff7828;
+      --accent2: #ffaa55;
+      --accent3: #ff5500;
+      --text: #eef0ff;
+      --text-dim: #8890aa;
+      --text-muted: #44475a;
+      --ict: #38b6ff;
+      --security: #ff4466;
+      --pava: #a855f7;
+      --electrical: #f59e0b;
+      --mechanical: #10b981;
+      --hvac: #0ea5e9;
+      --firefighting: #ef4444;
+      --ict-disc: #38b6ff;
+      --success: #00e5a0;
+      --glow: 0 0 30px rgba(255,120,40,0.15);
+      --glow-hot: 0 0 50px rgba(255,120,40,0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      font-family: 'Exo 2', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED BACKGROUND GRID ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,120,40,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,120,40,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,80,0,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #appRoot {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    @keyframes scanline {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(255,120,40,0.4); }
+      70%  { box-shadow: 0 0 0 12px rgba(255,120,40,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,120,40,0); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+
+    /* ── HOME HEADER ── */
+    .home-header {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .home-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-hexagon {
+      width: 64px; height: 64px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-hexagon svg { width: 64px; height: 64px; }
+
+    .home-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #ff7828 0%, #ffaa55 50%, #ff5500 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .home-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+
+    .home-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 2rem auto;
+      max-width: 400px;
+    }
+
+    .home-divider::before,
+    .home-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .home-divider span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+    }
+
+    /* ── CATEGORY GRID ── */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 1rem 0 3rem;
+    }
+
+    .category-card {
+      background: var(--surface2);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.3s;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .category-card:nth-child(1) { animation-delay: 0.1s; --cat-color: var(--ict); }
+    .category-card:nth-child(2) { animation-delay: 0.2s; --cat-color: var(--security); }
+    .category-card:nth-child(3) { animation-delay: 0.3s; --cat-color: var(--pava); }
+
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transition: left 0.5s;
+    }
+
+    .category-card:hover::before { left: 100%; }
+
+    .category-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cat-color), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .category-card:hover::after { opacity: 1; }
+
+    .category-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      border-color: var(--cat-color);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3);
+    }
+
+    .cat-corner-glow {
+      position: absolute;
+      bottom: -40px; right: -40px;
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, var(--cat-color), transparent 70%);
+      opacity: 0.08;
+      transition: opacity 0.3s;
+    }
+
+    .category-card:hover .cat-corner-glow { opacity: 0.15; }
+
+    .cat-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--cat-color);
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cat-tag::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: var(--cat-color);
+    }
+
+    .main-icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 20px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      transition: border-color 0.3s;
+    }
+
+    .category-card:hover .main-icon-wrap {
+      border-color: var(--cat-color);
+    }
+
+    .main-icon-wrap i {
+      font-size: 2rem;
+      color: var(--cat-color);
+    }
+
+    .main-icon-wrap svg {
+      width: 40px; height: 40px;
+    }
+
+    .cat-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .cat-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+    }
+
+    .sub-icons {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .sub-icon {
+      width: 36px; height: 36px;
+      background: var(--surface3);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--cat-color);
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      opacity: 0.6;
+    }
+
+    .category-card:hover .sub-icon {
+      border-color: var(--cat-color);
+      opacity: 1;
+      background: rgba(0,0,0,0.3);
+    }
+
+    /* ── PACKAGE VIEW ── */
+    .package-wrap {
+      animation: fadeIn 0.3s ease;
+    }
+
+    .pkg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pkg-title-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pkg-icon-box {
+      width: 52px; height: 52px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .pkg-icon-box.ict  { color: var(--ict);      border-color: rgba(56,182,255,0.3); }
+    .pkg-icon-box.sec  { color: var(--security); border-color: rgba(255,68,102,0.3); }
+    .pkg-icon-box.pava { color: var(--pava);     border-color: rgba(168,85,247,0.3); }
+
+    .pkg-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .pkg-count {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .back-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-family: 'Exo 2', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-dim);
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: var(--surface3);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+
+    .tool-icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .tool-icon-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+      --card-color: var(--accent);
+    }
+
+    .tool-icon-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: var(--card-color);
+      background: var(--surface3);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,0,0,0.15);
+    }
+
+    .tool-big-icon {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--card-color);
+    }
+
+    .tool-icon-card h3 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .tool-icon-card .tool-arrow {
+      position: absolute;
+      bottom: 12px; right: 16px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .tool-icon-card:hover .tool-arrow {
+      color: var(--card-color);
+      transform: translateX(3px);
+    }
+
+    /* ── TOOL CONTAINER ── */
+    .tool-container {
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tool-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tool-title-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .tool-title-icon {
+      width: 44px; height: 44px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    .tool-title-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .tool-body {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 12px 18px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .input-group select option {
+      background: var(--surface3);
+    }
+
+    .inputs-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .calc-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .calc-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      transform: translate(-50%,-50%);
+      transition: width 0.3s, height 0.3s, opacity 0.3s;
+    }
+
+    .calc-btn:hover::before { width: 200px; height: 200px; opacity: 0; }
+    .calc-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,120,40,0.3); }
+    .calc-btn:active { transform: translateY(0); }
+
+    .result {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 1.2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .result-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-item:last-child { border-bottom: none; }
+
+    .result-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      min-width: 120px;
+    }
+
+    .result-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent2);
+    }
+
+    canvas {
+      background: #060609;
+      border-radius: 14px;
+      width: 100%;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .footer span {
+      color: var(--accent);
+      animation: blink 2s ease infinite;
+    }
+
+    /* ── EXTERNAL TOOL LOADER ── */
+    .ext-loader-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s ease 0.4s both;
+      flex-wrap: wrap;
+    }
+
+    .ext-loader-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ext-loader-label i { color: var(--accent); }
+
+    .ext-loader-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .ext-loader-input:focus { border-color: var(--accent); }
+    .ext-loader-input::placeholder { color: var(--text-muted); }
+
+    .ext-loader-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .ext-loader-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    .ext-loader-file-btn {
+      background: var(--surface3);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .ext-loader-file-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+    .ext-tool-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 1000;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .ext-tool-frame-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ext-tool-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .ext-tool-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ext-tool-name i { opacity: 0.7; }
+
+    .ext-close-btn {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .ext-close-btn:hover { border-color: var(--security); color: var(--security); }
+
+    .ext-tool-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      background: #000;
+    }
+
+    .ext-loader-error {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--security);
+      letter-spacing: 0.08em;
+      padding: 6px 10px;
+      background: rgba(255,68,102,0.08);
+      border: 1px solid rgba(255,68,102,0.2);
+      border-radius: 6px;
+      display: none;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .category-grid { grid-template-columns: 1fr; }
+      .tool-icons-grid { grid-template-columns: 1fr 1fr; }
+      .home-title { font-size: 2.2rem; }
+      .inputs-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .tool-icons-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .breadcrumb .sep { color: var(--accent); }
+    .breadcrumb .current { color: var(--text-dim); }
+    .breadcrumb .bread-link { cursor: pointer; transition: color 0.2s; }
+    .breadcrumb .bread-link:hover { color: var(--accent2); }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 16px;
+      margin-bottom: 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: blink 1.5s ease infinite;
+    }
+
+    .status-text { color: var(--text-dim); letter-spacing: 0.1em; }
+  </style>
+</head>
+<body>
+<div id="appRoot"></div>
+
+<script>
+// ─── UTILITY ───────────────────────────────────────────────
+function resultRow(label, value, unit='') {
+  return `<div class="result-item"><span class="result-label">${label}</span><span class="result-val">${value}<small style="font-size:0.7em; color:var(--text-dim); margin-left:4px">${unit}</small></span></div>`;
+}
+
+// ─── TOOL FUNCTIONS ────────────────────────────────────────
+function bandwidthCalc(mbps) {
+  if(isNaN(mbps)||mbps<=0) return '<div class="result">Enter a positive Mbps value.</div>';
+  const mbs = (mbps/8).toFixed(3);
+  const kbps = (mbps*1000).toFixed(0);
+  const gbs = (mbps/8000).toFixed(4);
+  return `<div class="result">
+    ${resultRow('DATA RATE', mbps, 'Mbps')}
+    ${resultRow('THROUGHPUT', mbs, 'MB/s')}
+    ${resultRow('IN KBPS', kbps, 'Kbps')}
+    ${resultRow('IN GB/s', gbs, 'GB/s')}
+    ${resultRow('HD VIDEO (5 Mbps)', Math.floor(mbps/5), 'streams')}
+    ${resultRow('4K VIDEO (25 Mbps)', Math.floor(mbps/25), 'streams')}
+  </div>`;
+}
+
+function thermalLoadCalc(power, area, people) {
+  const heatPeople = people * 120;
+  const total = power + heatPeople;
+  const btu = (total * 3.412).toFixed(0);
+  const tons = (total / 3517).toFixed(2);
+  const density = area > 0 ? (total/area).toFixed(1) : 'N/A';
+  return `<div class="result">
+    ${resultRow('EQUIPMENT HEAT', power, 'W')}
+    ${resultRow('OCCUPANT HEAT', heatPeople, 'W')}
+    ${resultRow('TOTAL HEAT LOAD', total.toFixed(0), 'W')}
+    ${resultRow('IN BTU/H', btu, 'BTU/h')}
+    ${resultRow('COOLING TONNAGE', tons, 'TR')}
+    ${resultRow('HEAT DENSITY', density, 'W/m²')}
+  </div>`;
+}
+
+function soundSPL(sens, power, dist) {
+  const spl = sens + 10*Math.log10(power) - 20*Math.log10(dist);
+  const splFar = sens + 10*Math.log10(power) - 20*Math.log10(dist*2);
+  const minPwr = Math.pow(10, (70 - sens + 20*Math.log10(dist)) / 10).toFixed(1);
+  return `<div class="result">
+    ${resultRow('SPL @ ' + dist + 'm', spl.toFixed(1), 'dB')}
+    ${resultRow('SPL @ ' + (dist*2) + 'm', splFar.toFixed(1), 'dB')}
+    ${resultRow('LOSS PER DOUBLE DIST.', '6', 'dB')}
+    ${resultRow('MIN PWR FOR 70dB', minPwr, 'W')}
+    ${resultRow('SENSITIVITY', sens, 'dB 1W/1m')}
+  </div>`;
+}
+
+function screenCalc(diag, aspect) {
+  const diagCm = diag * 2.54;
+  const ratio = aspect === '16:9' ? 16/9 : 4/3;
+  const w = Math.sqrt(diagCm*diagCm / (1 + 1/(ratio*ratio)));
+  const h = w / ratio;
+  const opt = (w * 1.6).toFixed(0);
+  const min = (w * 1.2).toFixed(0);
+  const max = (w * 2.0).toFixed(0);
+  return `<div class="result">
+    ${resultRow('DIAGONAL', diag + '" / ' + diagCm.toFixed(0) + 'cm', '')}
+    ${resultRow('WIDTH', w.toFixed(0), 'cm')}
+    ${resultRow('HEIGHT', h.toFixed(0), 'cm')}
+    ${resultRow('OPTIMAL DIST.', opt, 'cm')}
+    ${resultRow('MIN VIEW DIST.', min, 'cm')}
+    ${resultRow('MAX VIEW DIST.', max, 'cm')}
+  </div>`;
+}
+
+function projectorCalc(widthCm, tr) {
+  const dist = (widthCm/100) * tr;
+  const lumens = Math.ceil((widthCm/30) * 80);
+  const shortTR = 0.4;
+  const shortDist = (widthCm/100) * shortTR;
+  return `<div class="result">
+    ${resultRow('SCREEN WIDTH', widthCm, 'cm')}
+    ${resultRow('THROW RATIO', tr, ':1')}
+    ${resultRow('THROW DISTANCE', dist.toFixed(2), 'm')}
+    ${resultRow('SHORT THROW DIST.', shortDist.toFixed(2), 'm (TR 0.4)')}
+    ${resultRow('REC. LUMENS', lumens, 'lm')}
+  </div>`;
+}
+
+function controlRoomDesign(monitors, depthCm, widthM) {
+  const minWidth = (monitors * 0.55).toFixed(1);
+  const viewDist = (depthCm/100 * 1.2).toFixed(1);
+  const rows = Math.ceil(monitors / 6);
+  return `<div class="result">
+    ${resultRow('MONITORS', monitors, 'units')}
+    ${resultRow('MIN DESK WIDTH', minWidth, 'm')}
+    ${resultRow('VIEWING DISTANCE', viewDist, 'm')}
+    ${resultRow('ROOM WIDTH REQ.', widthM + 'm+', '')}
+    ${resultRow('SUGGESTED ROWS', rows, 'rows')}
+  </div>`;
+}
+
+// ─── WIFI HEATMAP ──────────────────────────────────────────
+class WifiHeatmap {
+  constructor(canvasId, w, h) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.width = w || 500; this.height = h || 280;
+    this.canvas.width = this.width; this.canvas.height = this.height;
+    this.aps = [{x:0.3,y:0.4,power:20},{x:0.7,y:0.6,power:20}];
+    this.dragIndex = -1;
+    this.initEvents(); this.draw();
+  }
+  setAPs(aps) { this.aps = aps; this.draw(); }
+  initEvents() {
+    const getPos = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      let x = (e.clientX - rect.left) * (this.width/rect.width);
+      let y = (e.clientY - rect.top) * (this.height/rect.height);
+      return {x: Math.min(Math.max(0,x), this.width), y: Math.min(Math.max(0,y), this.height)};
+    };
+    this.canvas.addEventListener('mousedown', (e) => {
+      const {x,y} = getPos(e);
+      for(let i=0;i<this.aps.length;i++) {
+        const ax = this.aps[i].x*this.width, ay = this.aps[i].y*this.height;
+        if(Math.hypot(x-ax, y-ay) < 22) { this.dragIndex = i; break; }
+      }
+      if(this.dragIndex !== -1) e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if(this.dragIndex !== -1) {
+        const {x,y} = getPos(e);
+        this.aps[this.dragIndex].x = x/this.width;
+        this.aps[this.dragIndex].y = y/this.height;
+        this.draw(); this.updateDisplay();
+      }
+    });
+    window.addEventListener('mouseup', () => { this.dragIndex = -1; });
+  }
+  draw() {
+    let img = this.ctx.getImageData(0,0,this.width,this.height);
+    for(let py=0;py<this.height;py++) for(let px=0;px<this.width;px++) {
+      let sum = 0;
+      for(let ap of this.aps) {
+        const dx = (px/this.width - ap.x)*this.width, dy = (py/this.height - ap.y)*this.height;
+        let sig = ap.power - Math.min(60, 20*Math.log10(Math.hypot(dx,dy)+0.5)+25);
+        sig = Math.min(-30, Math.max(-85, sig));
+        sum += (sig+85)/55;
+      }
+      const inten = Math.min(1, sum/this.aps.length);
+      const r = Math.min(255, inten>0.5 ? 255 : inten*2*255);
+      const g = Math.min(255, inten>0.5 ? (1-inten)*2*255 : inten*2*255);
+      const b = Math.min(255, inten<0.3 ? (0.3-inten)/0.3*180 : 0);
+      const idx = (py*this.width + px)*4;
+      img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=200;
+    }
+    this.ctx.putImageData(img,0,0);
+    for(const ap of this.aps) {
+      const cx = ap.x*this.width, cy = ap.y*this.height;
+      this.ctx.beginPath(); this.ctx.arc(cx,cy,16,0,2*Math.PI);
+      this.ctx.fillStyle='rgba(255,255,255,0.15)'; this.ctx.fill();
+      this.ctx.strokeStyle='#ff7828'; this.ctx.lineWidth=2; this.ctx.stroke();
+      this.ctx.fillStyle='white'; this.ctx.font='bold 14px monospace';
+      this.ctx.textAlign='center'; this.ctx.textBaseline='middle';
+      this.ctx.fillText('📡', cx, cy);
+    }
+  }
+  updateDisplay() {
+    const el = document.getElementById('apCoordsDisplay');
+    if(el) el.innerText = this.aps.map((ap,i)=>`AP${i+1}: (${(ap.x*100).toFixed(0)}%, ${(ap.y*100).toFixed(0)}%)`).join('   ');
+  }
+}
+
+// ─── CCTV FOV ──────────────────────────────────────────────
+function drawCCTVFOV(canvasId, sensorMM, focalMM, distM) {
+  const c = document.getElementById(canvasId); if(!c) return;
+  const ctx = c.getContext('2d'); const w=500, h=320;
+  c.width=w; c.height=h;
+  ctx.fillStyle='#060609'; ctx.fillRect(0,0,w,h);
+
+  // Grid
+  ctx.strokeStyle='rgba(255,120,40,0.08)'; ctx.lineWidth=1;
+  for(let x=0;x<w;x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<h;y+=40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+  const fovRad = 2*Math.atan(sensorMM/(2*focalMM));
+  const fovDeg = (fovRad*180/Math.PI).toFixed(1);
+  const half = fovRad/2;
+  const widthAtDist = 2*distM*Math.tan(half);
+  const scale = Math.min((w-80)/(distM*1.1), (h-80)/(widthAtDist+1));
+  const tipX=60, tipY=h/2;
+  const lenPx = distM * scale;
+  const halfWidthPx = Math.tan(half)*lenPx;
+  const leftY = tipY - halfWidthPx, rightY = tipY + halfWidthPx;
+
+  // FOV fill
+  ctx.beginPath(); ctx.moveTo(tipX,tipY); ctx.lineTo(tipX+lenPx, leftY); ctx.lineTo(tipX+lenPx, rightY); ctx.closePath();
+  const grad = ctx.createLinearGradient(tipX,0, tipX+lenPx,0);
+  grad.addColorStop(0,'rgba(255,120,40,0.4)'); grad.addColorStop(1,'rgba(255,120,40,0.05)');
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.strokeStyle='#ff7828'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // Camera
+  ctx.beginPath(); ctx.arc(tipX,tipY,10,0,2*Math.PI);
+  ctx.fillStyle='#ff7828'; ctx.fill();
+  ctx.fillStyle='white'; ctx.font='bold 10px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('●', tipX, tipY);
+
+  // Coverage line
+  ctx.beginPath(); ctx.moveTo(tipX+lenPx, leftY); ctx.lineTo(tipX+lenPx, rightY);
+  ctx.strokeStyle='rgba(255,170,85,0.6)'; ctx.lineWidth=2; ctx.stroke();
+
+  // Labels
+  ctx.fillStyle='rgba(255,120,40,0.8)'; ctx.font='600 11px monospace'; ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText(`FOV: ${fovDeg}°`, tipX+5, 10);
+  ctx.fillText(`COVERAGE: ${widthAtDist.toFixed(1)}m @ ${distM}m`, tipX+5, 26);
+
+  // Distance label
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(tipX,tipY+halfWidthPx+15); ctx.lineTo(tipX+lenPx,tipY+halfWidthPx+15);
+  ctx.strokeStyle='rgba(255,120,40,0.4)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#ffaa55'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillText(distM+'m', tipX + lenPx/2, tipY+halfWidthPx+20);
+}
+
+// ─── SECURITY SVG ICON ─────────────────────────────────────
+const securitySVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="24,4 42,12 42,28 24,44 6,28 6,12" fill="none" stroke="#ff4466" stroke-width="2"/>
+  <polygon points="24,10 36,16 36,28 24,38 12,28 12,16" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.4)" stroke-width="1"/>
+  <circle cx="24" cy="22" r="6" fill="none" stroke="#ff4466" stroke-width="1.5"/>
+  <circle cx="24" cy="22" r="2" fill="#ff4466"/>
+  <line x1="24" y1="10" x2="24" y2="16" stroke="#ff4466" stroke-width="1.5"/>
+  <line x1="24" y1="28" x2="24" y2="38" stroke="#ff4466" stroke-width="1"/>
+</svg>`;
+
+// ─── RENDER HOME ────────────────────────────────────────────
+const app = document.getElementById('appRoot');
+
+const categories = [
+  {
+    id: 'ict',
+    tag: 'NETWORK & INFRASTRUCTURE',
+    title: 'ICT TOOLS',
+    desc: 'Bandwidth, thermal & Wi-Fi analysis',
+    iconClass: 'ict',
+    color: 'var(--ict)',
+    icon: '<i class="fas fa-network-wired"></i>',
+    subIcons: ['fa-tachometer-alt','fa-temperature-high','fa-wifi','fa-server','fa-diagram-project'],
+    tools: [
+      { name:'Bandwidth Calculator', icon:'fas fa-tachometer-alt', toolId:'bandwidth' },
+      { name:'Thermal / Heat Load Calculator', icon:'fas fa-temperature-high', toolId:'thermal' },
+      { name:'Wi-Fi Heatmap Visualizations Tool', icon:'fas fa-wifi', toolId:'wifi' },
+      { name:'Telecom Room Design', icon:'fas fa-server', toolId:'telecom' },
+      { name:'Schematic Diagram Drawing Tool', icon:'fas fa-diagram-project', toolId:'schematic' }
+    ]
+  },
+  {
+    id: 'security',
+    tag: 'SURVEILLANCE & CONTROL',
+    title: 'SECURITY TOOLS',
+    desc: 'CCTV coverage & control room layout',
+    iconClass: 'sec',
+    color: 'var(--security)',
+    icon: securitySVG,
+    subIcons: ['fa-video','fa-camera-rotate','fa-desktop'],
+    tools: [
+      { name:'CCTV FOV Drawing Tool', icon:'fas fa-video', toolId:'cctv' },
+      { name:'Video Installation & Surveillance Tilt Analyzer Tool', icon:'fas fa-camera-rotate', toolId:'tilt-analyzer' },
+      { name:'Control Room Design Tool', icon:'fas fa-desktop', toolId:'controlroom' }
+    ]
+  },
+  {
+    id: 'pava',
+    tag: 'AUDIO & VISUAL SYSTEMS',
+    title: 'PA/AV TOOLS',
+    desc: 'Sound, screen & projection design',
+    iconClass: 'pava',
+    color: 'var(--pava)',
+    icon: '<i class="fas fa-chalkboard-user"></i>',
+    subIcons: ['fa-music','fa-tv','fa-film'],
+    tools: [
+      { name:'Sound System Design Tool', icon:'fas fa-music', toolId:'sound' },
+      { name:'Screen Size Calculator TOOL', icon:'fas fa-tv', toolId:'screen' },
+      { name:'Projector Design Tool', icon:'fas fa-film', toolId:'projector' }
+    ]
+  }
+];
+
+// ─── EXTERNAL TOOL MODAL ────────────────────────────────────
+function openExternalToolModal(src, label, isBlob) {
+  const modal = document.createElement('div');
+  modal.className = 'ext-tool-modal';
+
+  let iframeSrc = '';
+  let blobUrl = '';
+
+  if (isBlob) {
+    // File was read as text — wrap in blob URL
+    const blob = new Blob([src], { type: 'text/html' });
+    blobUrl = URL.createObjectURL(blob);
+    iframeSrc = blobUrl;
+  } else {
+    iframeSrc = src;
+  }
+
+  const shortLabel = label.length > 60 ? '…' + label.slice(-57) : label;
+
+  modal.innerHTML = `
+    <div class="ext-tool-frame-wrap">
+      <div class="ext-tool-topbar">
+        <span class="ext-tool-name">
+          <i class="fas fa-file-code"></i>
+          EXTERNAL TOOL &nbsp;—&nbsp; ${shortLabel}
+        </span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="ext-close-btn" id="extCloseBtn"><i class="fas fa-times"></i> CLOSE</button>
+        </div>
+      </div>
+      <iframe class="ext-tool-iframe" id="extToolIframe" src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups"></iframe>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('extCloseBtn').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  });
+
+  // Escape key closes modal
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(modal);
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// ─── MEP DISCIPLINES ────────────────────────────────────────
+const disciplines = [
+  {
+    id: 'electrical',
+    tag: 'POWER & LIGHTING SYSTEMS',
+    title: 'Electrical Design Tools',
+    desc: 'Load schedules, single-line diagrams & lighting',
+    color: 'var(--electrical)',
+    iconHtml: '<i class="fas fa-bolt"></i>',
+    subIcons: ['fa-lightbulb','fa-plug-circle-bolt','fa-table-cells','fa-cloud-bolt'],
+    isEmpty: false,
+    tools: [
+      { name:'Lighting System Design Tools', icon:'fas fa-lightbulb', toolId:'lighting' },
+      { name:'Power System Analysis Tools', icon:'fas fa-plug-circle-bolt', toolId:'power' },
+      { name:'Panel SLD Design Tools', icon:'fas fa-table-cells', toolId:'panel-sld' },
+      { name:'Earthing / Lightning Protection Systems Design Tools', icon:'fas fa-cloud-bolt', toolId:'earthing' }
+    ]
+  },
+  {
+    id: 'mechanical',
+    tag: 'HVAC & PLUMBING SYSTEMS',
+    title: 'Mechanical Design Tools',
+    desc: 'HVAC loads, duct sizing & pipe flow',
+    color: 'var(--mechanical)',
+    iconHtml: '<i class="fas fa-wind"></i>',
+    subIcons: ['fa-temperature-half','fa-gauge','fa-droplet'],
+    isEmpty: false,
+    tools: {
+      hvac: [
+        { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-half', toolId:'hvac-load' },
+        { name:'Duct Sizing & Air Distribution Design Tool', icon:'fas fa-wind', toolId:'duct-sizing' }
+      ],
+      firefighting: [
+        { name:'Sprinkler Spacing & Coverage Design Tool', icon:'fas fa-fire-extinguisher', toolId:'sprinkler' },
+        { name:'Pipe Pressure Drop Design Tool', icon:'fas fa-droplet', toolId:'pipe-pressure' }
+      ]
+    }
+  },
+  {
+    id: 'ict',
+    tag: 'NETWORKS, SECURITY & AV',
+    title: 'ICT Design Tools',
+    desc: 'ICT, Security & PA/VA engineering toolkits',
+    color: 'var(--ict-disc)',
+    iconHtml: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+      <rect x="6" y="10" width="36" height="24" rx="3" fill="none" stroke="#38b6ff" stroke-width="2"/>
+      <line x1="6" y1="18" x2="42" y2="18" stroke="#38b6ff" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <circle cx="14" cy="14" r="2" fill="#38b6ff"/>
+      <circle cx="20" cy="14" r="2" fill="rgba(56,182,255,0.4)"/>
+      <line x1="24" y1="34" x2="24" y2="40" stroke="#38b6ff" stroke-width="2"/>
+      <line x1="16" y1="40" x2="32" y2="40" stroke="#38b6ff" stroke-width="2"/>
+      <text x="24" y="30" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="10" font-weight="700" fill="#38b6ff">ICT</text>
+    </svg>`,
+    subIcons: ['fa-network-wired','fa-shield-halved','fa-music'],
+    isEmpty: false
+  }
+];
+
+function renderHome() {
+  app.innerHTML = `
+    <div class="home-header">
+      <div class="home-logo">
+        <div class="logo-hexagon">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="32,4 58,18 58,46 32,60 6,46 6,18" fill="none" stroke="#ff7828" stroke-width="2"/>
+            <polygon points="32,12 50,22 50,42 32,52 14,42 14,22" fill="rgba(255,120,40,0.05)" stroke="rgba(255,120,40,0.3)" stroke-width="1"/>
+            <text x="32" y="33" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="9" font-weight="700" fill="#ff7828">MEP</text>
+            <text x="32" y="42" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="6" font-weight="500" fill="rgba(255,120,40,0.7)">PLATFORM</text>
+          </svg>
+        </div>
+      </div>
+      <h1 class="home-title">MEP DESIGN PLATFORM</h1>
+      <p class="home-sub">Electrical &nbsp;·&nbsp; Mechanical &nbsp;·&nbsp; ICT Engineering Suites</p>
+      <div class="home-divider"><span>SELECT DISCIPLINE</span></div>
+    </div>
+
+    <div class="category-grid">
+      ${disciplines.map((d, i) => `
+        <div class="category-card" data-disc="${d.id}" style="--cat-color:${d.color}; animation-delay:${0.1+i*0.1}s">
+          <div class="cat-corner-glow"></div>
+          <div class="cat-tag">${d.tag}</div>
+          <div class="main-icon-wrap">
+            ${d.iconHtml}
+          </div>
+          <div class="cat-title">${d.title}</div>
+          <div class="cat-desc">${d.desc}</div>
+          <div class="sub-icons">
+            ${d.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
+          </div>
+          ${d.isEmpty ? `<div style="margin-top:1rem; display:inline-flex; align-items:center; gap:6px; background:rgba(0,0,0,0.3); border:1px solid ${d.color}30; border-radius:20px; padding:4px 12px; font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; color:${d.color}; opacity:0.7"><i class="fas fa-clock"></i> COMING SOON</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="footer"><span>■</span> MEP DESIGN PLATFORM &nbsp;·&nbsp; v3.0 &nbsp;·&nbsp; ALL SYSTEMS OPERATIONAL</div>
+  `;
+  document.querySelectorAll('.category-card').forEach(card => {
+    const discId = card.getAttribute('data-disc');
+    const disc = disciplines.find(d => d.id === discId);
+    card.addEventListener('click', () => {
+      if (disc.isEmpty) return;
+      renderDiscipline(discId);
+    });
+    if (disc.isEmpty) card.style.cursor = 'default';
+  });
+}
+
+// ─── ICT DISCIPLINE VIEW (mid-level) ────────────────────────
+function renderDiscipline(discId) {
+  if (discId === 'ict') renderICTHome();
+  else if (discId === 'electrical') renderElectricalHome();
+  else if (discId === 'mechanical') renderMechanicalHome();
+}
+
+function renderElectricalHome() {
+  const disc = disciplines.find(d => d.id === 'electrical');
+  app.innerHTML = `
+    <div class="home-header" style="padding-top:2rem">
+      <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
+        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="sep">›</span>
+        <span class="current">ELECTRICAL DESIGN TOOLS</span>
+      </div>
+      <h1 class="home-title" style="font-size:2.4rem">ELECTRICAL DESIGN TOOLS</h1>
+      <p class="home-sub">Power &nbsp;·&nbsp; Lighting &nbsp;·&nbsp; Protection Systems</p>
+      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
+        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
+          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
+        </button>
+      </div>
+      <div class="home-divider"><span>SELECT TOOL</span></div>
+    </div>
+    <div class="tool-icons-grid">
+      ${disc.tools.map((t, i) => `
+        <div class="tool-icon-card" data-tool="${t.toolId}" style="animation-delay:${i*0.08}s; --card-color:var(--electrical)">
+          <div class="tool-big-icon"><i class="${t.icon}"></i></div>
+          <h3>${t.name}</h3>
+          <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+        </div>
+      `).join('')}
+      <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${disc.tools.length*0.08}s; border-style:dashed; --card-color:var(--electrical)">
+        <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
+        <h3>Load External File</h3>
+        <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+    </div>
+    <div class="footer"><span>■</span> ELECTRICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
+  `;
+  document.getElementById('breadHome').onclick = renderHome;
+  document.getElementById('btnMepHome').onclick = renderHome;
+  document.querySelectorAll('.tool-icon-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const toolId = card.getAttribute('data-tool');
+      if (toolId === '__load__') renderGenericLoadTool('electrical', 'ELECTRICAL DESIGN TOOLS', renderElectricalHome);
+      else renderGenericTool('electrical', toolId, disc.tools, 'var(--electrical)', renderElectricalHome);
+    });
+  });
+}
+
+// ─── MECHANICAL DATA ────────────────────────────────────────
+const mechPackages = [
+  {
+    id: 'hvac',
+    tag: 'HVAC SYSTEMS',
+    title: 'HVAC Systems',
+    desc: 'Load calculation, energy analysis & duct distribution',
+    icon: '<i class="fas fa-wind"></i>',
+    color: 'var(--hvac)',
+    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line'],
+    tools: [
+      { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-arrow-up', toolId:'hvac-load' },
+      { name:'Duct Sizing & Air Distribution Design Tool', icon:'fas fa-arrows-left-right-to-line', toolId:'duct-sizing' }
+    ]
+  },
+  {
+    id: 'firefighting',
+    tag: 'FIRE FIGHTING & PLUMBING SYSTEMS',
+    title: 'Fire Fighting & Plumbing',
+    desc: 'Sprinkler coverage & pipe pressure drop analysis',
+    icon: '<i class="fas fa-fire-extinguisher"></i>',
+    color: 'var(--firefighting)',
+    subIcons: ['fa-shower','fa-gauge-high'],
+    tools: [
+      { name:'Sprinkler Spacing & Coverage Design Tool', icon:'fas fa-shower', toolId:'sprinkler' },
+      { name:'Pipe Pressure Drop Design Tool', icon:'fas fa-gauge-high', toolId:'pipe-pressure' }
+    ]
+  }
+];
+
+function renderMechanicalHome() {
+  app.innerHTML = `
+    <div class="home-header" style="padding-top:2rem">
+      <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
+        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="sep">›</span>
+        <span class="current">MECHANICAL DESIGN TOOLS</span>
+      </div>
+      <h1 class="home-title" style="font-size:2.4rem">MECHANICAL DESIGN TOOLS</h1>
+      <p class="home-sub">HVAC &nbsp;·&nbsp; Fire Fighting &nbsp;·&nbsp; Plumbing Systems</p>
+      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
+        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
+          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
+        </button>
+      </div>
+      <div class="home-divider"><span>SELECT PACKAGE</span></div>
+    </div>
+    <div class="category-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px,1fr))">
+      ${mechPackages.map((pkg, i) => `
+        <div class="category-card" data-mech-pkg="${pkg.id}" style="--cat-color:${pkg.color}; animation-delay:${0.1+i*0.1}s; cursor:pointer">
+          <div class="cat-corner-glow"></div>
+          <div class="cat-tag">${pkg.tag}</div>
+          <div class="main-icon-wrap" style="color:${pkg.color}; font-size:2rem">${pkg.icon}</div>
+          <div class="cat-title">${pkg.title}</div>
+          <div class="cat-desc">${pkg.desc}</div>
+          <div class="sub-icons">
+            ${pkg.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="footer"><span>■</span> MECHANICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>
+  `;
+  document.getElementById('breadHome').onclick = renderHome;
+  document.getElementById('btnMepHome').onclick = renderHome;
+  document.querySelectorAll('[data-mech-pkg]').forEach(card => {
+    card.addEventListener('click', () => renderMechPackage(card.getAttribute('data-mech-pkg')));
+  });
+}
+
+function renderMechPackage(pkgId) {
+  const pkg = mechPackages.find(p => p.id === pkgId);
+  app.innerHTML = `
+    <div class="package-wrap">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHomeMech">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrMechDisc">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="current">${pkg.title.toUpperCase()}</span>
+      </div>
+      <div class="pkg-header">
+        <div class="pkg-title-row">
+          <div class="pkg-icon-box" style="color:${pkg.color}; border-color:${pkg.color}40; background:${pkg.color}14; font-size:1.4rem">${pkg.icon}</div>
+          <div>
+            <div class="pkg-name">${pkg.title}</div>
+            <div class="pkg-count">${pkg.tools.length} TOOLS AVAILABLE</div>
+          </div>
+        </div>
+        <button class="back-btn" id="backMechHome"><i class="fas fa-arrow-left"></i> Mechanical Design Tools</button>
+      </div>
+      <div class="tool-icons-grid">
+        ${pkg.tools.map((t, i) => `
+          <div class="tool-icon-card" data-tool="${t.toolId}" style="animation-delay:${i*0.08}s; --card-color:${pkg.color}">
+            <div class="tool-big-icon"><i class="${t.icon}"></i></div>
+            <h3>${t.name}</h3>
+            <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+          </div>
+        `).join('')}
+        <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${pkg.tools.length*0.08}s; border-style:dashed; --card-color:${pkg.color}">
+          <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>Load External File</h3>
+          <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> ${pkg.title.toUpperCase()} &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backMechHome').onclick = renderMechanicalHome;
+  document.getElementById('bcrHomeMech').onclick = renderHome;
+  document.getElementById('bcrMechDisc').onclick = renderMechanicalHome;
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  document.querySelectorAll('.tool-icon-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const toolId = card.getAttribute('data-tool');
+      if (toolId === '__load__') {
+        renderMechTool(pkgId, '__load__');
+      } else {
+        renderMechTool(pkgId, toolId);
+      }
+    });
+  });
+}
+
+function renderMechTool(pkgId, toolId) {
+  const pkg = mechPackages.find(p => p.id === pkgId);
+  const isLoad = toolId === '__load__';
+  const tool = isLoad ? { name:'Load External File', icon:'fas fa-folder-open', toolId:'__load__' } : pkg.tools.find(t => t.toolId === toolId);
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHomeMT">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrMechMT">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrPkgMT">${pkg.title}</span><span class="sep">›</span>
+        <span class="current">${tool.name.toUpperCase()}</span>
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${pkg.color}; border-color:${pkg.color}40"><i class="${tool.icon}"></i></div>
+          <span class="tool-title-text">${tool.name}</span>
+        </div>
+        <button class="back-btn" id="backToPkgMT"><i class="fas fa-arrow-left"></i> Back to ${pkg.title}</button>
+      </div>
+      <div class="tool-body">
+        <div style="text-align:center; padding:3rem 1rem;">
+          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
+            No built-in content — load the external tool file below
+          </div>
+          <div class="ext-loader-bar" style="margin-bottom:0">
+            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
+            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${toolId}.html">
+            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+            <span class="ext-loader-error" id="extLoaderError"></span>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backToPkgMT').onclick = () => renderMechPackage(pkgId);
+  document.getElementById('bcrHomeMT').onclick = renderHome;
+  document.getElementById('bcrMechMT').onclick = renderMechanicalHome;
+  document.getElementById('bcrPkgMT').onclick = () => renderMechPackage(pkgId);
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  wireExtLoader();
+}
+
+
+function renderGenericTool(discId, toolId, tools, color, backFn) {
+  const tool = tools.find(t => t.toolId === toolId);
+  const discLabel = discId === 'electrical' ? 'ELECTRICAL DESIGN TOOLS' : 'MECHANICAL DESIGN TOOLS';
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHomeG">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrDiscG">${discLabel}</span><span class="sep">›</span>
+        <span class="current">${tool.name.toUpperCase()}</span>
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${color}; border-color:${color.replace('var(--','').replace(')','')};"><i class="${tool.icon}"></i></div>
+          <span class="tool-title-text">${tool.name}</span>
+        </div>
+        <button class="back-btn" id="backToDiscG"><i class="fas fa-arrow-left"></i> Back</button>
+      </div>
+      <div class="tool-body">
+        <div style="text-align:center; padding:3rem 1rem;">
+          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
+            No built-in content — load the external tool file below
+          </div>
+          <div class="ext-loader-bar" style="margin-bottom:0">
+            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
+            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${toolId}.html">
+            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+            <span class="ext-loader-error" id="extLoaderError"></span>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backToDiscG').onclick = backFn;
+  document.getElementById('bcrHomeG').onclick = renderHome;
+  document.getElementById('bcrDiscG').onclick = backFn;
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  wireExtLoader();
+}
+
+function renderGenericLoadTool(discId, discLabel, backFn) {
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHomeGL">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrDiscGL">${discLabel}</span><span class="sep">›</span>
+        <span class="current">LOAD EXTERNAL FILE</span>
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon"><i class="fas fa-folder-open"></i></div>
+          <span class="tool-title-text">Load External File</span>
+        </div>
+        <button class="back-btn" id="backToDiscGL"><i class="fas fa-arrow-left"></i> Back</button>
+      </div>
+      <div class="tool-body">
+        <div class="ext-loader-bar" style="margin-bottom:0">
+          <span class="ext-loader-label"><i class="fas fa-file-code"></i> FILE PATH / URL</span>
+          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tool.html or https://…">
+          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+          <span class="ext-loader-error" id="extLoaderError"></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backToDiscGL').onclick = backFn;
+  document.getElementById('bcrHomeGL').onclick = renderHome;
+  document.getElementById('bcrDiscGL').onclick = backFn;
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  wireExtLoader();
+}
+
+function renderICTHome() {
+  app.innerHTML = `
+    <div class="home-header" style="padding-top:2rem">
+      <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
+        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="sep">›</span>
+        <span class="current">ICT DESIGN TOOLS</span>
+      </div>
+      <h1 class="home-title" style="font-size:2.4rem">ICT DESIGN TOOLS</h1>
+      <p class="home-sub">Networks &nbsp;·&nbsp; Security &nbsp;·&nbsp; PA/AV Specialized Toolkits</p>
+      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
+        <button id="btnMepHomeICT" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
+          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
+        </button>
+      </div>
+      <div class="home-divider"><span>SELECT PACKAGE</span></div>
+    </div>
+
+    <div class="category-grid">
+      ${categories.map(cat => `
+        <div class="category-card" data-cat="${cat.id}" style="--cat-color:${cat.color}">
+          <div class="cat-corner-glow"></div>
+          <div class="cat-tag">${cat.tag}</div>
+          <div class="main-icon-wrap">
+            ${cat.icon}
+          </div>
+          <div class="cat-title">${cat.title}</div>
+          <div class="cat-desc">${cat.desc}</div>
+          <div class="sub-icons">
+            ${cat.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="footer"><span>■</span> ICT DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>
+  `;
+  document.getElementById('breadHome').onclick = renderHome;
+  document.getElementById('btnMepHomeICT').onclick = renderHome;
+  document.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('click', () => renderPackage(card.getAttribute('data-cat')));
+  });
+}
+
+function renderPackage(catId) {
+  const cat = categories.find(c => c.id === catId);
+  app.innerHTML = `
+    <div class="package-wrap">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHome">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrICT">ICT DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="current">${cat.title}</span>
+      </div>
+      <div class="pkg-header">
+        <div class="pkg-title-row">
+          <div class="pkg-icon-box ${cat.iconClass}">${cat.icon}</div>
+          <div>
+            <div class="pkg-name">${cat.title}</div>
+            <div class="pkg-count">${cat.tools.length} TOOLS AVAILABLE</div>
+          </div>
+        </div>
+        <button class="back-btn" id="backHomeBtn"><i class="fas fa-arrow-left"></i> ICT Design Tools</button>
+      </div>
+      <div class="tool-icons-grid">
+        ${cat.tools.map((t, i) => `
+          <div class="tool-icon-card" data-tool="${t.toolId}" style="animation-delay:${i*0.08}s; --card-color:${cat.color}">
+            <div class="tool-big-icon"><i class="${t.icon}"></i></div>
+            <h3>${t.name}</h3>
+            <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+          </div>
+        `).join('')}
+        <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${cat.tools.length*0.08}s; border-style:dashed; --card-color:${cat.color}">
+          <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>Load External File</h3>
+          <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> SELECT A TOOL TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backHomeBtn').onclick = renderICTHome;
+  document.getElementById('bcrHome').onclick = renderHome;
+  document.getElementById('bcrICT').onclick = renderICTHome;
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  document.querySelectorAll('.tool-icon-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const toolId = card.getAttribute('data-tool');
+      if (toolId === '__load__') renderLoadTool(catId);
+      else renderTool(catId, toolId);
+    });
+  });
+}
+
+function renderTool(catId, toolId) {
+  const cat = categories.find(c => c.id === catId);
+  const tool = cat.tools.find(t => t.toolId === toolId);
+
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHome2">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrICT2">ICT DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrPkg2">${cat.title}</span><span class="sep">›</span>
+        <span class="current">${tool.name.toUpperCase()}</span>
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${cat.color}; border-color:${cat.color}40"><i class="${tool.icon}"></i></div>
+          <span class="tool-title-text">${tool.name}</span>
+        </div>
+        <button class="back-btn" id="backToPackage"><i class="fas fa-arrow-left"></i> Back to ${cat.title}</button>
+      </div>
+      <div class="tool-body">
+        <div style="text-align:center; padding:3rem 1rem;">
+          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
+            No built-in content — load the external tool file below
+          </div>
+          <div class="ext-loader-bar" style="margin-bottom:0">
+            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
+            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${tool.toolId}.html">
+            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+            <span class="ext-loader-error" id="extLoaderError"></span>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>
+  `;
+
+  document.getElementById('backToPackage').onclick = () => renderPackage(catId);
+  document.getElementById('bcrHome2').onclick = renderHome;
+  document.getElementById('bcrICT2').onclick = renderICTHome;
+  document.getElementById('bcrPkg2').onclick = () => renderPackage(catId);
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  wireExtLoader();
+}
+
+function renderLoadTool(catId) {
+  const cat = categories.find(c => c.id === catId);
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        <span class="bread-link" id="bcrHomeL">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrICTL">ICT DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrPkgL">${cat.title}</span><span class="sep">›</span>
+        <span class="current">LOAD EXTERNAL FILE</span>
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${cat.color}; border-color:${cat.color}40"><i class="fas fa-folder-open"></i></div>
+          <span class="tool-title-text">Load External File</span>
+        </div>
+        <button class="back-btn" id="backToPackage"><i class="fas fa-arrow-left"></i> Back to ${cat.title}</button>
+      </div>
+      <div class="tool-body">
+        <div class="ext-loader-bar" style="margin-bottom:0">
+          <span class="ext-loader-label"><i class="fas fa-file-code"></i> FILE PATH / URL</span>
+          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./bandwidth.html or https://…">
+          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+          <span class="ext-loader-error" id="extLoaderError"></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>
+  `;
+  document.getElementById('backToPackage').onclick = () => renderPackage(catId);
+  document.getElementById('bcrHomeL').onclick = renderHome;
+  document.getElementById('bcrICTL').onclick = renderICTHome;
+  document.getElementById('bcrPkgL').onclick = () => renderPackage(catId);
+  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
+  wireExtLoader();
+}
+
+function wireExtLoader() {
+  const filePickBtn  = document.getElementById('extFilePickBtn');
+  const filePicker   = document.getElementById('extFilePicker');
+  const pathInput    = document.getElementById('extPathInput');
+  const loadBtn      = document.getElementById('extLoadBtn');
+  const errorEl      = document.getElementById('extLoaderError');
+
+  filePickBtn.addEventListener('click', () => filePicker.click());
+
+  filePicker.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      pathInput.value = file.name;
+      openExternalToolModal(ev.target.result, file.name, true);
+    };
+    reader.readAsText(file);
+    filePicker.value = '';
+  });
+
+  loadBtn.addEventListener('click', () => {
+    const val = pathInput.value.trim();
+    errorEl.style.display = 'none';
+    if (!val) { errorEl.textContent = '⚠ Enter a file path or URL first.'; errorEl.style.display = 'block'; return; }
+    openExternalToolModal(val, val, false);
+  });
+
+  pathInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
+}
+
+renderHome();
+</script>
+</body>
+</html>
