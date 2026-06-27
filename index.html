@@ -1,9 +1,1687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>MEP Design Platform</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEP Design Platform</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;
+    background:#000;overflow:hidden;
+    font-family:'Exo 2',sans-serif;
+  }
+
+  /* ── PHASE VIEW CONTAINERS ── */
+  .phase-view{
+    position:fixed; inset:0; width:100%; height:100%;
+    display:none; background:#000; z-index:1;
+  }
+  .phase-view.active{ display:block; }
+  .phase-frame{
+    width:100%; height:100%; border:none; display:block; background:#000;
+  }
+
+  /* ── SESSION BADGE (top right, sits above MEP iframe) ── */
+  #sessionBadge{
+    position:fixed; top:18px; right:18px; z-index:5000;
+    display:none; align-items:center; gap:10px;
+    background:rgba(10,10,14,0.85); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,120,40,0.4); border-radius:10px;
+    padding:9px 16px; font-family:'Space Mono',monospace;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(255,120,40,0.08);
+  }
+  #sessionBadge .dot{
+    width:8px; height:8px; border-radius:50%; background:#00e5a0;
+    box-shadow:0 0 8px #00e5a0; animation:badgePulse 1.4s ease infinite;
+  }
+  #sessionBadge.warn .dot{ background:#ff4466; box-shadow:0 0 8px #ff4466; }
+  @keyframes badgePulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  #sessionBadge .lbl{
+    font-size:0.6rem; letter-spacing:0.15em; color:#8890aa; text-transform:uppercase;
+  }
+  #sessionBadge .val{
+    font-size:0.95rem; font-weight:700; color:#ffaa55; letter-spacing:0.04em;
+  }
+  #sessionBadge.warn .val{ color:#ff4466; }
+
+  /* ── LOGIN VIEW ── */
+  #viewLogin{
+    display:none;
+    background:#000;
+    position:fixed; inset:0; z-index:2;
+    align-items:center; justify-content:center;
+    overflow:auto;
+  }
+  #viewLogin.active{ display:flex; }
+  #viewLogin::before{
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,120,40,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,120,40,0.05) 1px, transparent 1px);
+    background-size:50px 50px; pointer-events:none;
+  }
+  #viewLogin::after{
+    content:''; position:fixed; top:-200px; right:-200px;
+    width:600px; height:600px;
+    background:radial-gradient(circle, rgba(255,80,0,0.08) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .login-card{
+    position:relative; z-index:2;
+    width:100%; max-width:400px; margin:24px;
+    background:#0c0c10; border:1px solid rgba(255,120,40,0.35);
+    border-radius:22px; padding:2.8rem 2.2rem 2.2rem;
+    text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,0.7), 0 0 50px rgba(255,120,40,0.08);
+    animation:loginUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes loginUp{ from{opacity:0; transform:translateY(24px);} to{opacity:1; transform:translateY(0);} }
+  .login-card.shake{ animation:shakeX 0.4s ease; }
+  @keyframes shakeX{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);} 40%{transform:translateX(8px);}
+    60%{transform:translateX(-5px);} 80%{transform:translateX(5px);}
+  }
+  .login-logo{ width:72px; height:72px; margin:0 auto 1.2rem; }
+  .login-logo svg{ width:72px; height:72px; }
+  .login-card h1{
+    font-family:'Rajdhani',sans-serif; font-size:1.7rem; font-weight:700;
+    letter-spacing:0.06em; color:#eef0ff; text-transform:uppercase; margin-bottom:0.4rem;
+  }
+  .login-sub{
+    font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.18em;
+    color:#8890aa; text-transform:uppercase; margin-bottom:2rem;
+  }
+  .login-field{ text-align:left; margin-bottom:1.1rem; }
+  .login-field label{
+    display:flex; align-items:center; gap:7px;
+    font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.12em;
+    color:#8890aa; text-transform:uppercase; margin-bottom:6px;
+  }
+  .login-field input{
+    width:100%; background:#1a1a24; border:1px solid rgba(255,120,40,0.2);
+    border-radius:10px; padding:12px 14px; color:#eef0ff;
+    font-family:'Exo 2',sans-serif; font-size:0.92rem; outline:none;
+    transition:border-color 0.2s;
+  }
+  .login-field input:focus{ border-color:#ff7828; }
+  .login-error{
+    display:none; font-family:'Space Mono',monospace; font-size:0.68rem;
+    color:#ff4466; background:rgba(255,68,102,0.08);
+    border:1px solid rgba(255,68,102,0.3); border-radius:8px;
+    padding:9px 12px; margin-bottom:1rem; text-align:left; letter-spacing:0.04em;
+  }
+  .login-btn{
+    width:100%; background:linear-gradient(135deg,#ff7828,#ff5500);
+    color:#000; border:none; padding:13px; border-radius:10px;
+    font-family:'Rajdhani',sans-serif; font-size:1rem; font-weight:700;
+    letter-spacing:0.06em; cursor:pointer; text-transform:uppercase;
+    transition:all 0.2s; margin-top:0.2rem;
+  }
+  .login-btn:hover{ filter:brightness(1.12); transform:translateY(-1px); }
+  .login-hint{
+    margin-top:1.4rem; font-family:'Space Mono',monospace; font-size:0.62rem;
+    color:#44475a; letter-spacing:0.1em;
+  }
+  .login-footer{
+    margin-top:1.6rem; font-family:'Space Mono',monospace; font-size:0.58rem;
+    letter-spacing:0.2em; color:#44475a; text-transform:uppercase;
+  }
+
+  /* ── STATIC NOISE (FINAL) VIEW ── */
+  #viewStatic{ background:#000; }
+  #staticCanvas{ width:100%; height:100%; display:block; }
+  .static-overlay{
+    position:absolute; inset:0; z-index:10;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .static-msg{
+    font-family:'Space Mono',monospace; color:#fff;
+    text-align:center; text-shadow:0 0 12px rgba(0,0,0,0.8);
+    animation:staticFlicker 0.12s infinite;
+  }
+  .static-msg .big{ font-size:2.2rem; letter-spacing:0.1em; font-weight:700; margin-bottom:0.6rem; }
+  .static-msg .small{ font-size:0.8rem; letter-spacing:0.2em; opacity:0.75; }
+  @keyframes staticFlicker{ 0%,100%{opacity:1;} 50%{opacity:0.85;} }
+  .static-reset{
+    position:fixed; bottom:14px; right:18px; z-index:20;
+    pointer-events:auto; background:none; border:none;
+    color:rgba(255,255,255,0.25); font-family:'Space Mono',monospace;
+    font-size:0.6rem; letter-spacing:0.1em; cursor:pointer;
+  }
+  .static-reset:hover{ color:rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<div class="phase-view" id="viewMatrix">
+  <iframe class="phase-frame" id="frameMatrix" title="Matrix Countdown"></iframe>
+</div>
+
+<div class="phase-view" id="viewLogin">
+  <div class="login-card" id="loginCard">
+    <div class="login-logo">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="32,4 58,18 58,46 32,60 6,46 6,18" fill="none" stroke="#ff7828" stroke-width="2"/>
+        <polygon points="32,12 50,22 50,42 32,52 14,42 14,22" fill="rgba(255,120,40,0.05)" stroke="rgba(255,120,40,0.3)" stroke-width="1"/>
+        <text x="32" y="33" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="9" font-weight="700" fill="#ff7828">MEP</text>
+        <text x="32" y="42" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="6" font-weight="500" fill="rgba(255,120,40,0.7)">PLATFORM</text>
+      </svg>
+    </div>
+    <h1>MEP Design Platform</h1>
+    <p class="login-sub">Restricted Access &middot; Authentication Required</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password" autocomplete="off">
+      </div>
+      <div class="login-error" id="loginError">ACCESS DENIED &mdash; invalid username or password</div>
+      <button type="submit" class="login-btn">Authenticate</button>
+    </form>
+    <div class="login-hint">Hint: admin / mep2024</div>
+    <div class="login-footer">System Clearance Level 4 &middot; Session auto-expires after 10 min</div>
+  </div>
+</div>
+
+<div class="phase-view" id="viewMep">
+  <iframe class="phase-frame" id="frameMep" title="MEP Design Platform"></iframe>
+</div>
+<div id="sessionBadge">
+  <span class="dot"></span>
+  <span class="lbl">Session</span>
+  <span class="val" id="sessionTimeText">10:00</span>
+</div>
+
+<div class="phase-view" id="viewMario">
+  <iframe class="phase-frame" id="frameMario" title="404 Not Found"></iframe>
+</div>
+
+<div class="phase-view" id="viewStatic">
+  <canvas id="staticCanvas"></canvas>
+  <div class="static-overlay">
+    <div class="static-msg">
+      <div class="big">NO SIGNAL</div>
+      <div class="small">ALL SESSIONS HAVE EXPIRED</div>
+    </div>
+  </div>
+  <button class="static-reset" id="resetBtn">reset demo</button>
+</div>
+
+<template id="tplMatrix">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Matrix Rain Canvas */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* CRT Scanline Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* CRT Flicker */
+        .flicker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 255, 70, 0.03);
+            animation: flicker 0.15s infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        /* Vignette */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Timer Container */
+        .timer-container {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            padding: 50px 60px;
+            background: rgba(0, 20, 0, 0.7);
+            border: 2px solid #00ff41;
+            border-radius: 4px;
+            box-shadow:
+                0 0 20px rgba(0, 255, 65, 0.3),
+                inset 0 0 20px rgba(0, 255, 65, 0.1),
+                0 0 60px rgba(0, 255, 65, 0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        .timer-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 4px;
+            animation: borderPulse 2s infinite;
+        }
+
+        @keyframes borderPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Glitch Text Effect for Title */
+        .glitch-text {
+            font-size: 1.4rem;
+            color: #00ff41;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            position: relative;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff0000;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-1 3s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 #0000ff;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 15px, 0); }
+            20% { clip: rect(60px, 9999px, 70px, 0); }
+            40% { clip: rect(20px, 9999px, 5px, 0); }
+            60% { clip: rect(80px, 9999px, 50px, 0); }
+            80% { clip: rect(10px, 9999px, 40px, 0); }
+            100% { clip: rect(50px, 9999px, 20px, 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(10px, 9999px, 80px, 0); }
+            20% { clip: rect(80px, 9999px, 10px, 0); }
+            40% { clip: rect(30px, 9999px, 50px, 0); }
+            60% { clip: rect(60px, 9999px, 90px, 0); }
+            80% { clip: rect(20px, 9999px, 60px, 0); }
+            100% { clip: rect(70px, 9999px, 30px, 0); }
+        }
+
+        /* Timer Display */
+        .timer-display {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-box {
+            width: 100px;
+            height: 120px;
+            background: rgba(0, 10, 0, 0.9);
+            border: 1px solid #00ff41;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow:
+                0 0 15px rgba(0, 255, 65, 0.2),
+                inset 0 0 10px rgba(0, 255, 65, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .time-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00ff41, transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-120px); }
+            100% { transform: translateY(120px); }
+        }
+
+        .time-value {
+            font-size: 3.5rem;
+            font-weight: 400;
+            color: #00ff41;
+            text-shadow:
+                0 0 10px rgba(0, 255, 65, 0.8),
+                0 0 20px rgba(0, 255, 65, 0.4),
+                0 0 40px rgba(0, 255, 65, 0.2);
+            font-variant-numeric: tabular-nums;
+            font-family: 'VT323', monospace;
+            line-height: 1;
+        }
+
+        .time-label {
+            margin-top: 10px;
+            color: rgba(0, 255, 65, 0.6);
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .separator {
+            font-size: 2.5rem;
+            color: #00ff41;
+            font-weight: 400;
+            margin-top: -15px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-text {
+            margin-top: 30px;
+            color: rgba(0, 255, 65, 0.5);
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .finished {
+            animation: finishedPulse 0.5s infinite alternate;
+        }
+
+        @keyframes finishedPulse {
+            from { color: #00ff41; text-shadow: 0 0 20px rgba(0, 255, 65, 0.8); }
+            to { color: #ff0040; text-shadow: 0 0 30px rgba(255, 0, 64, 0.9); }
+        }
+
+        /* Binary decoration */
+        .binary-deco {
+            position: absolute;
+            font-size: 0.7rem;
+            color: rgba(0, 255, 65, 0.15);
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        .binary-top { top: 10px; left: 15px; }
+        .binary-bottom { bottom: 10px; right: 15px; }
+
+        @media (max-width: 600px) {
+            .timer-container {
+                padding: 30px 20px;
+            }
+            .time-box {
+                width: 70px;
+                height: 90px;
+            }
+            .time-value {
+                font-size: 2.5rem;
+            }
+            .timer-display {
+                gap: 8px;
+            }
+            .separator {
+                font-size: 1.8rem;
+            }
+            .glitch-text {
+                font-size: 1rem;
+                letter-spacing: 3px;
+            }
+        }
+    </style>
+    <canvas id="matrixCanvas"></canvas>
+    <div class="scanlines"></div>
+    <div class="flicker"></div>
+    <div class="vignette"></div>
+
+    <div class="timer-container">
+        <div class="binary-deco binary-top">01001110 01000101 01001111</div>
+        <div class="glitch-text" data-text="SYSTEM COUNTDOWN">SYSTEM COUNTDOWN</div>
+        <div class="timer-display">
+            <div class="time-unit">
+                <div class="time-box">
+                    <span class="time-value" id="hours">00</span>
+                </div>
+                <span class="time-label">Hours</span>
+            </div>
+            <div class="separator">:</div>
+            <div class="time-unit">
+                <div class="time-box">
+                    <span class="time-value" id="minutes">01</span>
+                </div>
+                <span class="time-label">Minutes</span>
+            </div>
+            <div class="separator">:</div>
+            <div class="time-unit">
+                <div class="time-box">
+                    <span class="time-value" id="seconds">00</span>
+                </div>
+                <span class="time-label">Seconds</span>
+            </div>
+        </div>
+        <div class="status-text" id="status">TIME REMAINING...</div>
+        <div class="binary-deco binary-bottom">01010100 01001000 01000101</div>
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const matrixChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&*';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * -100;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Timer Logic with localStorage - 1 MINUTE
+        const TOTAL_SECONDS = 1 * 60; // 1 minute
+
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const statusEl = document.getElementById('status');
+
+        let remainingSeconds;
+        const savedEndTime = localStorage.getItem('mep_matrix_end');
+
+        if (savedEndTime) {
+            const endTime = parseInt(savedEndTime);
+            remainingSeconds = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        } else {
+            remainingSeconds = TOTAL_SECONDS;
+            const endTime = Date.now() + (TOTAL_SECONDS * 1000);
+            localStorage.setItem('mep_matrix_end', endTime);
+        }
+
+        function updateDisplay() {
+            const hrs = Math.floor(remainingSeconds / 3600);
+            const mins = Math.floor((remainingSeconds % 3600) / 60);
+            const secs = remainingSeconds % 60;
+
+            hoursEl.textContent = String(hrs).padStart(2, '0');
+            minutesEl.textContent = String(mins).padStart(2, '0');
+            secondsEl.textContent = String(secs).padStart(2, '0');
+
+            // Color shift when time is running low (last 10 seconds)
+            if (remainingSeconds < 10) {
+                const urgency = 1 - (remainingSeconds / 10);
+                const r = Math.round(0 + urgency * 255);
+                const g = Math.round(255 - urgency * 215);
+                const b = Math.round(65 - urgency * 65);
+                const color = `rgb(${r}, ${g}, ${b})`;
+                document.querySelectorAll('.time-value').forEach(el => {
+                    el.style.color = color;
+                    el.style.textShadow = `0 0 10px ${color}, 0 0 20px ${color}`;
+                });
+            }
+        }
+
+        function countdown() {
+            if (remainingSeconds > 0) {
+                remainingSeconds--;
+                updateDisplay();
+            } else {
+                clearInterval(timerInterval);
+                statusEl.textContent = 'SYSTEM BREACH IMMINENT';
+                statusEl.classList.add('finished');
+                document.querySelectorAll('.time-value').forEach(el => {
+                    el.classList.add('finished');
+                });
+                localStorage.removeItem('mep_matrix_end');
+            }
+        }
+
+        updateDisplay();
+        const timerInterval = setInterval(countdown, 1000);
+    </script>
+</template>
+
+<template id="tplMario">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #5c94fc;
+            font-family: 'Courier New', monospace;
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #5c94fc 0%, #5c94fc 70%, #000 70%, #000 100%);
+        }
+
+        .error-404 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+            animation: errorPulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .error-code {
+            font-size: 120px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 
+                6px 6px 0 #000,
+                -3px -3px 0 #000,
+                3px -3px 0 #000,
+                -3px 3px 0 #000;
+            letter-spacing: 8px;
+            line-height: 1;
+        }
+
+        .error-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 
+                3px 3px 0 #000,
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000;
+            margin-top: 10px;
+            letter-spacing: 4px;
+        }
+
+        .sad-emoji {
+            font-size: 80px;
+            margin-top: 20px;
+            display: block;
+            animation: sadBounce 1.5s ease-in-out infinite;
+        }
+
+        .error-message {
+            font-size: 18px;
+            color: #ffcc99;
+            text-shadow: 2px 2px 0 #000;
+            margin-top: 15px;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        @keyframes errorPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+        }
+
+        @keyframes sadBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(-5deg); }
+            75% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        .error-code::before {
+            content: '404';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            color: #ff0000;
+            opacity: 0.7;
+            animation: glitch1 0.3s infinite linear alternate;
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+        }
+
+        .error-code::after {
+            content: '404';
+            position: absolute;
+            left: -2px;
+            top: -2px;
+            color: #00ffff;
+            opacity: 0.7;
+            animation: glitch2 0.3s infinite linear alternate;
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+        }
+
+        @keyframes glitch1 {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes glitch2 {
+            0% { transform: translate(0); }
+            20% { transform: translate(2px, -2px); }
+            40% { transform: translate(2px, 2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(-2px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 500;
+            pointer-events: none;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30vh;
+            background: #c84c0c;
+            border-top: 4px solid #000;
+            z-index: 10;
+        }
+
+        .ground-pattern {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(0,0,0,0.3) 30px, rgba(0,0,0,0.3) 32px),
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,0,0,0.3) 30px, rgba(0,0,0,0.3) 32px);
+        }
+
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 50px;
+            opacity: 0.6;
+            animation: floatCloud linear infinite;
+            z-index: 5;
+        }
+
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .cloud1 {
+            width: 100px;
+            height: 40px;
+            top: 10%;
+            left: -150px;
+            animation-duration: 15s;
+        }
+        .cloud1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .cloud1::after { width: 60px; height: 40px; top: -15px; right: 15px; }
+
+        .cloud2 {
+            width: 80px;
+            height: 35px;
+            top: 20%;
+            left: -120px;
+            animation-duration: 12s;
+            animation-delay: 5s;
+        }
+        .cloud2::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+        .cloud2::after { width: 50px; height: 35px; top: -10px; right: 10px; }
+
+        @keyframes floatCloud {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(100vw + 200px)); }
+        }
+
+        .hill {
+            position: absolute;
+            bottom: 30vh;
+            width: 300px;
+            height: 150px;
+            background: #00aa00;
+            border-radius: 150px 150px 0 0;
+            border: 3px solid #000;
+            z-index: 8;
+            opacity: 0.8;
+        }
+
+        .hill::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50px;
+            width: 200px;
+            height: 100px;
+            background: #00cc00;
+            border-radius: 100px 100px 0 0;
+        }
+
+        .hill1 { left: 10%; }
+        .hill2 { left: 60%; transform: scale(0.8); }
+
+        .pipe {
+            position: absolute;
+            bottom: 30vh;
+            width: 80px;
+            height: 120px;
+            background: #00aa00;
+            border: 3px solid #000;
+            border-bottom: none;
+            z-index: 15;
+            opacity: 0.9;
+        }
+
+        .pipe::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: -10px;
+            width: 100px;
+            height: 35px;
+            background: #00aa00;
+            border: 3px solid #000;
+            border-radius: 2px;
+        }
+
+        .pipe1 { left: 30%; }
+        .pipe2 { left: 70%; height: 80px; }
+
+        .q-block {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #f8b800;
+            border: 3px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #000;
+            animation: qFloat 0.5s ease-in-out infinite alternate;
+            z-index: 15;
+            opacity: 0.9;
+        }
+
+        .q-block::after {
+            content: '?';
+        }
+
+        .q1 { bottom: 55vh; left: 45%; }
+        .q2 { bottom: 55vh; left: 50%; animation-delay: 0.2s; }
+        .q3 { bottom: 55vh; left: 55%; animation-delay: 0.4s; }
+
+        @keyframes qFloat {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            background: #ffd700;
+            border: 2px solid #000;
+            border-radius: 50%;
+            display: none;
+            animation: coinPop 1s ease-out forwards;
+            z-index: 20;
+        }
+
+        .coin::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 8px;
+            width: 10px;
+            height: 25px;
+            background: #ffed4e;
+            border-radius: 50%;
+        }
+
+        @keyframes coinPop {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-100px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-150px) scale(0); opacity: 0; }
+        }
+
+        .mario {
+            position: absolute;
+            bottom: 30vh;
+            left: -100px;
+            width: 50px;
+            height: 70px;
+            z-index: 100;
+            opacity: 0.7;
+        }
+
+        .mario.running {
+            animation: marioRun 15s linear forwards;
+        }
+
+        .mario-head {
+            width: 40px;
+            height: 40px;
+            background: #ff0000;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
+            border: 2px solid #000;
+        }
+
+        .mario-face {
+            width: 35px;
+            height: 30px;
+            background: #ffcc99;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            left: 2px;
+        }
+
+        .mario-hat {
+            width: 44px;
+            height: 15px;
+            background: #ff0000;
+            position: absolute;
+            top: -5px;
+            left: -2px;
+            border-radius: 20px 20px 0 0;
+            border: 2px solid #000;
+        }
+
+        .mario-eye {
+            width: 6px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            right: 8px;
+        }
+
+        .mario-mustache {
+            width: 20px;
+            height: 8px;
+            background: #000;
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            bottom: 8px;
+            right: 5px;
+        }
+
+        .mario-body {
+            width: 40px;
+            height: 30px;
+            background: #ff0000;
+            margin: 0 auto;
+            border-radius: 5px;
+            border: 2px solid #000;
+            position: relative;
+        }
+
+        .mario-overall {
+            width: 30px;
+            height: 20px;
+            background: #0000ff;
+            position: absolute;
+            bottom: 0;
+            left: 5px;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .mario-arm {
+            width: 15px;
+            height: 25px;
+            background: #ff0000;
+            position: absolute;
+            top: 0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            animation: armSwing 0.3s ease-in-out infinite alternate;
+        }
+
+        .mario-arm.left { left: -10px; transform-origin: top right; }
+        .mario-arm.right { right: -10px; transform-origin: top left; animation-delay: 0.15s; }
+
+        .mario-leg {
+            width: 15px;
+            height: 20px;
+            background: #0000ff;
+            position: absolute;
+            bottom: -18px;
+            border: 2px solid #000;
+            border-radius: 0 0 5px 5px;
+            animation: legRun 0.3s ease-in-out infinite alternate;
+        }
+
+        .mario-leg.left { left: 5px; }
+        .mario-leg.right { right: 5px; animation-delay: 0.15s; }
+
+        .mario-shoe {
+            width: 20px;
+            height: 12px;
+            background: #8b4513;
+            position: absolute;
+            bottom: -2px;
+            left: -5px;
+            border: 2px solid #000;
+            border-radius: 5px 5px 0 0;
+        }
+
+        @keyframes armSwing {
+            from { transform: rotate(-20deg); }
+            to { transform: rotate(20deg); }
+        }
+
+        @keyframes legRun {
+            from { transform: rotate(-15deg) translateY(0); }
+            to { transform: rotate(15deg) translateY(-3px); }
+        }
+
+        @keyframes marioRun {
+            0% { left: -100px; bottom: 30vh; }
+            10% { left: 20%; bottom: 30vh; }
+            12% { left: 25%; bottom: 50vh; transform: scale(1.1); }
+            15% { left: 30%; bottom: 30vh; transform: scale(1); }
+            20% { left: 40%; bottom: 30vh; }
+            22% { left: 43%; bottom: 55vh; }
+            24% { left: 45%; bottom: 30vh; }
+            30% { left: 55%; bottom: 30vh; }
+            32% { left: 58%; bottom: 55vh; }
+            34% { left: 60%; bottom: 30vh; }
+            40% { left: 70%; bottom: 30vh; }
+            42% { left: 72%; bottom: 50vh; transform: scale(1.1); }
+            45% { left: 75%; bottom: 30vh; transform: scale(1); }
+            50% { left: 85%; bottom: 30vh; }
+            52% { left: 87%; bottom: 55vh; }
+            54% { left: 90%; bottom: 30vh; }
+            60% { left: 100%; bottom: 30vh; }
+            65% { left: 110%; bottom: 30vh; }
+            70% { left: 80%; bottom: 30vh; }
+            75% { left: 60%; bottom: 30vh; }
+            80% { left: 50%; bottom: 30vh; }
+            85% { left: 40%; bottom: 30vh; }
+            90% { left: 30%; bottom: 30vh; }
+            95% { left: 20%; bottom: 30vh; }
+            100% { left: 50%; bottom: 30vh; transform: translateX(-50%); }
+        }
+
+        .goomba {
+            position: absolute;
+            bottom: 30vh;
+            width: 40px;
+            height: 40px;
+            z-index: 90;
+            opacity: 0.7;
+        }
+
+        .goomba.walking {
+            animation: goombaWalk 15s linear forwards;
+        }
+
+        .goomba-body {
+            width: 40px;
+            height: 30px;
+            background: #8b4513;
+            border-radius: 20px 20px 0 0;
+            border: 2px solid #000;
+            position: relative;
+        }
+
+        .goomba-eye {
+            width: 8px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+            border: 1px solid #000;
+        }
+
+        .goomba-eye.left { left: 8px; }
+        .goomba-eye.right { right: 8px; }
+
+        .goomba-pupil {
+            width: 4px;
+            height: 6px;
+            background: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+        }
+
+        .goomba-foot {
+            width: 15px;
+            height: 12px;
+            background: #000;
+            position: absolute;
+            bottom: -10px;
+            border-radius: 0 0 5px 5px;
+            animation: goombaFoot 0.4s ease-in-out infinite alternate;
+        }
+
+        .goomba-foot.left { left: 2px; }
+        .goomba-foot.right { right: 2px; animation-delay: 0.2s; }
+
+        @keyframes goombaWalk {
+            0% { left: 110%; }
+            20% { left: 80%; }
+            25% { left: 75%; transform: scaleY(0.3); }
+            30% { left: 70%; transform: scaleY(1); opacity: 0; }
+            100% { left: 70%; opacity: 0; }
+        }
+
+        @keyframes goombaFoot {
+            from { transform: translateY(0); }
+            to { transform: translateY(-3px); }
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFade 1s ease-out forwards;
+            z-index: 25;
+        }
+
+        @keyframes particleFade {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .home-btn {
+            position: absolute;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background: #e60012;
+            border: 3px solid #000;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 3px 3px 0 #000;
+            transition: all 0.1s;
+            z-index: 300;
+            animation: btnPulse 2s ease-in-out infinite;
+            text-decoration: none;
+            display: inline-block;
+            pointer-events: auto;
+        }
+
+        .home-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 5px 5px 0 #000;
+            background: #ff1a1a;
+        }
+
+        .home-btn:active {
+            transform: translateX(-50%) translateY(2px);
+            box-shadow: 1px 1px 0 #000;
+        }
+
+        @keyframes btnPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        .music-btn {
+            position: absolute;
+            top: 5%;
+            right: 5%;
+            width: 50px;
+            height: 50px;
+            background: #f8b800;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 3px 3px 0 #000;
+            transition: all 0.1s;
+        }
+
+        .music-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 5px 5px 0 #000;
+        }
+
+        .music-btn:active {
+            transform: translateY(2px);
+            box-shadow: 1px 1px 0 #000;
+        }
+
+        .music-btn.muted {
+            background: #888;
+        }
+
+        .music-hint {
+            position: absolute;
+            bottom: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #fff;
+            text-shadow: 1px 1px 0 #000;
+            z-index: 300;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .error-code { font-size: 72px; }
+            .error-text { font-size: 24px; }
+            .sad-emoji { font-size: 60px; }
+            .error-message { font-size: 14px; max-width: 300px; }
+            .mario { transform: scale(0.8); }
+            .goomba { transform: scale(0.8); }
+        }
+    </style>
+    <div class="scene">
+        <div class="overlay"></div>
+
+        <div class="error-404">
+            <div class="error-code">404</div>
+            <div class="error-text">NOT FOUND</div>
+            <div class="sad-emoji">😢</div>
+            <div class="error-message">
+                Oops! The page you're looking for<br>
+                has fallen down a warp pipe.<br>
+                Mario is searching for it...
+            </div>
+        </div>
+
+        <button class="music-btn muted" id="musicBtn" onclick="toggleMusic()">🔇</button>
+
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+
+        <div class="hill hill1"></div>
+        <div class="hill hill2"></div>
+
+        <div class="pipe pipe1"></div>
+        <div class="pipe pipe2"></div>
+
+        <div class="q-block q1" id="q1"></div>
+        <div class="q-block q2" id="q2"></div>
+        <div class="q-block q3" id="q3"></div>
+
+        <div class="coin" id="coin"></div>
+
+        <div class="goomba walking" id="goomba">
+            <div class="goomba-body">
+                <div class="goomba-eye left"><div class="goomba-pupil"></div></div>
+                <div class="goomba-eye right"><div class="goomba-pupil"></div></div>
+            </div>
+            <div class="goomba-foot left"></div>
+            <div class="goomba-foot right"></div>
+        </div>
+
+        <div class="mario running" id="mario">
+            <div class="mario-head">
+                <div class="mario-hat"></div>
+                <div class="mario-face">
+                    <div class="mario-eye"></div>
+                    <div class="mario-mustache"></div>
+                </div>
+            </div>
+            <div class="mario-body">
+                <div class="mario-overall"></div>
+                <div class="mario-arm left"></div>
+                <div class="mario-arm right"></div>
+            </div>
+            <div class="mario-leg left"><div class="mario-shoe"></div></div>
+            <div class="mario-leg right"><div class="mario-shoe"></div></div>
+        </div>
+
+        <div class="ground">
+            <div class="ground-pattern"></div>
+        </div>
+
+        <button class="home-btn" onclick="restartAnimation()">🏠 GO HOME</button>
+
+        <div class="music-hint" id="musicHint">Click 🔇 to enable music</div>
+    </div>
+
+    <script>
+        // ==================== SUPER MARIO MUSIC ====================
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let musicPlaying = false;
+        let musicInterval = null;
+        let musicStarted = false;
+
+        const notes = {
+            'E4': 329.63, 'E5': 659.25, 'E6': 1318.51,
+            'C4': 261.63, 'C5': 523.25, 'C6': 1046.50,
+            'G3': 196.00, 'G4': 392.00, 'G5': 783.99,
+            'A3': 220.00, 'A4': 440.00, 'A5': 880.00,
+            'B3': 246.94, 'B4': 493.88, 'B5': 987.77,
+            'D4': 293.66, 'D5': 587.33, 'D6': 1174.66,
+            'F4': 349.23, 'F5': 698.46, 'F6': 1396.91,
+            'G2': 98.00, 'G6': 1567.98,
+            'C3': 130.81, 'C7': 2093.00,
+            'F3': 174.61, 'F7': 2793.83,
+            'A2': 110.00, 'A6': 1760.00,
+            'B2': 123.47, 'B6': 1975.53,
+            'D3': 146.83, 'D7': 2349.32,
+            'E3': 164.81, 'E7': 2637.02,
+            'REST': 0
+        };
+
+        const melody = [
+            ['E5', 0.15], ['E5', 0.15], ['REST', 0.15], ['E5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['REST', 0.3], ['G4', 0.3],
+            ['REST', 0.3],
+            ['C5', 0.15], ['REST', 0.15], ['G4', 0.15], ['REST', 0.15],
+            ['E4', 0.15], ['REST', 0.15], ['A4', 0.15], ['REST', 0.15],
+            ['B4', 0.15], ['REST', 0.15], ['A4', 0.15], ['A4', 0.15],
+            ['G4', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['A5', 0.15], ['REST', 0.15], ['F5', 0.15],
+            ['G5', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['B4', 0.3],
+            ['REST', 0.3],
+            ['C5', 0.15], ['REST', 0.15], ['G4', 0.15], ['REST', 0.15],
+            ['E4', 0.15], ['REST', 0.15], ['A4', 0.15], ['REST', 0.15],
+            ['B4', 0.15], ['REST', 0.15], ['A4', 0.15], ['A4', 0.15],
+            ['G4', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['A5', 0.15], ['REST', 0.15], ['F5', 0.15],
+            ['G5', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['B4', 0.3],
+            ['REST', 0.3],
+            ['G5', 0.15], ['F5', 0.15], ['E5', 0.15], ['D5', 0.15],
+            ['E5', 0.3], ['REST', 0.15], ['G4', 0.15],
+            ['A4', 0.15], ['C5', 0.15], ['REST', 0.15], ['A4', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['REST', 0.3],
+            ['G5', 0.15], ['F5', 0.15], ['E5', 0.15], ['D5', 0.15],
+            ['E5', 0.3], ['REST', 0.15], ['C5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['C5', 0.15], ['REST', 0.15],
+            ['C5', 0.3], ['REST', 0.3],
+            ['G5', 0.15], ['F5', 0.15], ['E5', 0.15], ['D5', 0.15],
+            ['E5', 0.3], ['REST', 0.15], ['G4', 0.15],
+            ['A4', 0.15], ['C5', 0.15], ['REST', 0.15], ['A4', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['REST', 0.3],
+            ['D5', 0.15], ['REST', 0.15], ['D5', 0.15], ['D5', 0.15],
+            ['E5', 0.3], ['REST', 0.15], ['D5', 0.15],
+            ['C5', 0.15], ['REST', 0.15], ['REST', 0.3],
+            ['REST', 0.3],
+            ['C5', 0.15], ['C5', 0.15], ['REST', 0.15], ['C5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['D5', 0.15], ['REST', 0.15],
+            ['E5', 0.15], ['C5', 0.15], ['REST', 0.15], ['A4', 0.15],
+            ['G4', 0.3], ['REST', 0.3],
+            ['C5', 0.15], ['C5', 0.15], ['REST', 0.15], ['C5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['D5', 0.15], ['E5', 0.15],
+            ['REST', 0.3], ['REST', 0.3],
+            ['C5', 0.15], ['C5', 0.15], ['REST', 0.15], ['C5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['D5', 0.15], ['REST', 0.15],
+            ['E5', 0.15], ['C5', 0.15], ['REST', 0.15], ['A4', 0.15],
+            ['G4', 0.3], ['REST', 0.3],
+            ['E5', 0.15], ['E5', 0.15], ['REST', 0.15], ['E5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['REST', 0.3], ['G4', 0.3],
+            ['REST', 0.3],
+            ['E5', 0.15], ['E5', 0.15], ['REST', 0.15], ['E5', 0.15],
+            ['REST', 0.15], ['C5', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['REST', 0.3], ['G4', 0.3],
+            ['REST', 0.3],
+            ['C5', 0.15], ['REST', 0.15], ['G4', 0.15], ['REST', 0.15],
+            ['E4', 0.15], ['REST', 0.15], ['A4', 0.15], ['REST', 0.15],
+            ['B4', 0.15], ['REST', 0.15], ['A4', 0.15], ['A4', 0.15],
+            ['G4', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['A5', 0.15], ['REST', 0.15], ['F5', 0.15],
+            ['G5', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['B4', 0.3],
+            ['REST', 0.3],
+            ['C5', 0.15], ['REST', 0.15], ['G4', 0.15], ['REST', 0.15],
+            ['E4', 0.15], ['REST', 0.15], ['A4', 0.15], ['REST', 0.15],
+            ['B4', 0.15], ['REST', 0.15], ['A4', 0.15], ['A4', 0.15],
+            ['G4', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['G5', 0.15], ['A5', 0.15], ['REST', 0.15], ['F5', 0.15],
+            ['G5', 0.15], ['REST', 0.15], ['E5', 0.15], ['REST', 0.15],
+            ['C5', 0.15], ['D5', 0.15], ['B4', 0.3],
+            ['REST', 0.3]
+        ];
+
+        function playTone(freq, duration, type = 'square') {
+            if (!audioCtx || freq === 0) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = type;
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playMusic() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+
+            if (musicPlaying) return;
+            musicPlaying = true;
+            musicStarted = true;
+
+            const musicBtn = document.getElementById('musicBtn');
+            musicBtn.textContent = '🔊';
+            musicBtn.classList.remove('muted');
+
+            const hint = document.getElementById('musicHint');
+            if (hint) hint.style.display = 'none';
+
+            let noteIndex = 0;
+
+            function playNextNote() {
+                if (!musicPlaying) return;
+
+                if (noteIndex >= melody.length) {
+                    noteIndex = 0;
+                }
+
+                const [note, duration] = melody[noteIndex];
+                const freq = notes[note] || 0;
+
+                playTone(freq, duration * 0.9);
+
+                noteIndex++;
+
+                musicInterval = setTimeout(playNextNote, duration * 1000);
+            }
+
+            playNextNote();
+        }
+
+        function stopMusic() {
+            musicPlaying = false;
+            clearTimeout(musicInterval);
+
+            const musicBtn = document.getElementById('musicBtn');
+            musicBtn.textContent = '🔇';
+            musicBtn.classList.add('muted');
+        }
+
+        function toggleMusic() {
+            if (musicPlaying) {
+                stopMusic();
+            } else {
+                playMusic();
+            }
+        }
+
+        // Try autoplay on load
+        window.addEventListener('load', function() {
+            try {
+                audioCtx = new AudioContext();
+                if (audioCtx.state === 'running') {
+                    playMusic();
+                }
+            } catch(e) {}
+        });
+
+        // Start music on first click anywhere
+        document.addEventListener('click', function startOnFirstClick(e) {
+            if (e.target.closest('.music-btn')) return;
+            if (!musicStarted) {
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => playMusic());
+                } else {
+                    playMusic();
+                }
+            }
+            document.removeEventListener('click', startOnFirstClick);
+        });
+
+        // ==================== ANIMATION ====================
+        let coinTimers = [];
+        let particleTimer = null;
+        let autoReloadTimer = null;
+
+        function clearAllTimers() {
+            if (autoReloadTimer) clearTimeout(autoReloadTimer);
+            coinTimers.forEach(t => clearTimeout(t));
+            coinTimers = [];
+            if (particleTimer) clearTimeout(particleTimer);
+        }
+
+        function startAnimation() {
+            clearAllTimers();
+
+            const coin = document.getElementById('coin');
+            coin.style.display = 'none';
+            coin.style.animation = 'none';
+
+            ['q1', 'q2', 'q3'].forEach(id => {
+                const block = document.getElementById(id);
+                block.style.animation = 'none';
+                block.style.transform = 'translateY(0)';
+                block.offsetHeight;
+                block.style.animation = 'qFloat 0.5s ease-in-out infinite alternate';
+            });
+
+            coinTimers.push(setTimeout(() => spawnCoin('q1'), 2200));
+            coinTimers.push(setTimeout(() => spawnCoin('q2'), 3200));
+            coinTimers.push(setTimeout(() => spawnCoin('q3'), 5200));
+
+            particleTimer = setTimeout(() => {
+                const goomba = document.getElementById('goomba');
+                const goombaRect = goomba.getBoundingClientRect();
+                createParticles(goombaRect.left + 20, goombaRect.top);
+            }, 7500);
+
+            autoReloadTimer = setTimeout(() => {
+                restartAnimation();
+            }, 15000);
+        }
+
+        function spawnCoin(blockId) {
+            const block = document.getElementById(blockId);
+            const coin = document.getElementById('coin');
+            const rect = block.getBoundingClientRect();
+
+            coin.style.display = 'block';
+            coin.style.left = rect.left + 10 + 'px';
+            coin.style.top = rect.top + 'px';
+            coin.style.animation = 'none';
+
+            requestAnimationFrame(() => {
+                coin.style.animation = 'coinPop 1s ease-out forwards';
+            });
+
+            block.style.animation = 'none';
+            block.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                block.style.transform = 'translateY(0)';
+                block.style.animation = 'qFloat 0.5s ease-in-out infinite alternate';
+            }, 200);
+        }
+
+        function createParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.setProperty('--tx', (Math.random() - 0.5) * 100 + 'px');
+                particle.style.setProperty('--ty', (Math.random() - 0.5) * 100 + 'px');
+                document.querySelector('.scene').appendChild(particle);
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        function restartAnimation() {
+            clearAllTimers();
+
+            const mario = document.getElementById('mario');
+            const goomba = document.getElementById('goomba');
+
+            // Remove animation classes to reset
+            mario.classList.remove('running');
+            goomba.classList.remove('walking');
+
+            // Force reflow
+            void mario.offsetWidth;
+            void goomba.offsetWidth;
+
+            // Re-add animation classes to restart
+            mario.classList.add('running');
+            goomba.classList.add('walking');
+
+            // Clear old particles
+            document.querySelectorAll('.particle').forEach(p => p.remove());
+
+            // Reset coin display
+            const coin = document.getElementById('coin');
+            coin.style.display = 'none';
+            coin.style.animation = 'none';
+
+            startAnimation();
+        }
+
+        // Start animation immediately on page load
+        startAnimation();
+    </script>
+</template>
+
+<template id="tplMep">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <style>
@@ -13,7 +1691,6 @@
       --surface2: #121218;
       --surface3: #1a1a24;
       --border: rgba(255,120,40,0.2);
-      --border-hot: rgba(255,120,40,0.7);
       --accent: #ff7828;
       --accent2: #ffaa55;
       --accent3: #ff5500;
@@ -29,8 +1706,6 @@
       --firefighting: #ef4444;
       --ict-disc: #38b6ff;
       --success: #00e5a0;
-      --glow: 0 0 30px rgba(255,120,40,0.15);
-      --glow-hot: 0 0 50px rgba(255,120,40,0.3);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,66 +1718,36 @@
       overflow-x: hidden;
     }
 
-    /* ── ANIMATED BACKGROUND GRID ── */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background-image:
         linear-gradient(rgba(255,120,40,0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,120,40,0.04) 1px, transparent 1px);
       background-size: 60px 60px;
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
 
     body::after {
       content: '';
-      position: fixed;
-      top: -200px; right: -200px;
+      position: fixed; top: -200px; right: -200px;
       width: 600px; height: 600px;
       background: radial-gradient(circle, rgba(255,80,0,0.06) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
 
     #appRoot {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-      min-height: 100vh;
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto;
+      padding: 2rem 1.5rem; min-height: 100vh;
     }
 
-    /* ── ANIMATIONS ── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    @keyframes fadeIn {
-      from { opacity: 0; } to { opacity: 1; }
-    }
-    @keyframes scanline {
-      0%   { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
-    }
-    @keyframes pulse-ring {
-      0%   { box-shadow: 0 0 0 0 rgba(255,120,40,0.4); }
-      70%  { box-shadow: 0 0 0 12px rgba(255,120,40,0); }
-      100% { box-shadow: 0 0 0 0 rgba(255,120,40,0); }
-    }
-    @keyframes spin-slow {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @keyframes shimmer {
-      0%   { background-position: -400px 0; }
-      100% { background-position: 400px 0; }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     /* ── HOME HEADER ── */
     .home-header {
@@ -110,1074 +1755,421 @@
       padding: 3rem 0 2rem;
       animation: fadeUp 0.6s ease both;
     }
-
     .home-logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 1.5rem;
+      display: inline-flex; align-items: center;
+      gap: 16px; margin-bottom: 1.5rem;
     }
-
-    .logo-hexagon {
-      width: 64px; height: 64px;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-    }
-
+    .logo-hexagon { width: 64px; height: 64px; position: relative; display: flex; align-items: center; justify-content: center; }
     .logo-hexagon svg { width: 64px; height: 64px; }
-
     .home-title {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 3.2rem;
-      font-weight: 700;
+      font-size: 3.2rem; font-weight: 700;
       letter-spacing: 0.08em;
       background: linear-gradient(135deg, #ff7828 0%, #ffaa55 50%, #ff5500 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      line-height: 1;
-      text-transform: uppercase;
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent; line-height: 1; text-transform: uppercase;
     }
-
     .home-sub {
       font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.25em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-top: 0.5rem;
+      font-size: 0.75rem; letter-spacing: 0.25em;
+      color: var(--text-dim); text-transform: uppercase; margin-top: 0.5rem;
     }
-
     .home-divider {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin: 2rem auto;
-      max-width: 400px;
+      display: flex; align-items: center; gap: 16px;
+      margin: 2rem auto; max-width: 400px;
     }
-
-    .home-divider::before,
-    .home-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
+    .home-divider::before, .home-divider::after {
+      content: ''; flex: 1; height: 1px;
       background: linear-gradient(90deg, transparent, var(--accent), transparent);
     }
-
     .home-divider span {
       font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--accent);
-      letter-spacing: 0.2em;
+      font-size: 0.65rem; color: var(--accent); letter-spacing: 0.2em;
     }
 
-    /* ── CATEGORY GRID ── */
+    /* ── CATEGORY / DISCIPLINE GRID ── */
     .category-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin: 1rem 0 3rem;
+      gap: 1.5rem; margin: 1rem 0 3rem;
     }
-
     .category-card {
-      background: var(--surface2);
-      border-radius: 20px;
-      padding: 2.5rem 2rem;
-      cursor: pointer;
+      background: var(--surface2); border-radius: 20px;
+      padding: 2.5rem 2rem; cursor: pointer;
       border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
       transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.3s;
       animation: fadeUp 0.5s ease both;
     }
-
-    .category-card:nth-child(1) { animation-delay: 0.1s; --cat-color: var(--ict); }
-    .category-card:nth-child(2) { animation-delay: 0.2s; --cat-color: var(--security); }
-    .category-card:nth-child(3) { animation-delay: 0.3s; --cat-color: var(--pava); }
-
     .category-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
+      content: ''; position: absolute; top: 0; left: -100%;
       width: 100%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
       transition: left 0.5s;
     }
-
     .category-card:hover::before { left: 100%; }
-
     .category-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, transparent, var(--cat-color), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
+      opacity: 0; transition: opacity 0.3s;
     }
-
     .category-card:hover::after { opacity: 1; }
-
     .category-card:hover {
       transform: translateY(-6px) scale(1.01);
       border-color: var(--cat-color);
       box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.3);
     }
-
     .cat-corner-glow {
-      position: absolute;
-      bottom: -40px; right: -40px;
+      position: absolute; bottom: -40px; right: -40px;
       width: 150px; height: 150px;
       background: radial-gradient(circle, var(--cat-color), transparent 70%);
-      opacity: 0.08;
-      transition: opacity 0.3s;
+      opacity: 0.08; transition: opacity 0.3s;
     }
-
     .category-card:hover .cat-corner-glow { opacity: 0.15; }
-
     .cat-tag {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      color: var(--cat-color);
-      text-transform: uppercase;
-      margin-bottom: 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.2em; color: var(--cat-color);
+      text-transform: uppercase; margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 8px;
     }
-
     .cat-tag::before {
-      content: '';
-      display: inline-block;
-      width: 20px; height: 1px;
+      content: ''; display: inline-block; width: 20px; height: 1px;
       background: var(--cat-color);
     }
-
     .main-icon-wrap {
-      width: 80px; height: 80px;
-      border-radius: 20px;
-      background: var(--surface3);
-      border: 1px solid var(--border);
+      width: 80px; height: 80px; border-radius: 20px;
+      background: var(--surface3); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.5rem;
-      position: relative;
-      transition: border-color 0.3s;
+      margin-bottom: 1.5rem; transition: border-color 0.3s;
     }
-
-    .category-card:hover .main-icon-wrap {
-      border-color: var(--cat-color);
-    }
-
-    .main-icon-wrap i {
-      font-size: 2rem;
-      color: var(--cat-color);
-    }
-
-    .main-icon-wrap svg {
-      width: 40px; height: 40px;
-    }
-
+    .category-card:hover .main-icon-wrap { border-color: var(--cat-color); }
+    .main-icon-wrap i { font-size: 2rem; color: var(--cat-color); }
+    .main-icon-wrap svg { width: 40px; height: 40px; }
     .cat-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      color: var(--text);
-      margin-bottom: 0.3rem;
+      font-family: 'Rajdhani', sans-serif; font-size: 1.7rem;
+      font-weight: 700; letter-spacing: 0.04em;
+      color: var(--text); margin-bottom: 0.3rem;
     }
-
-    .cat-desc {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-bottom: 1.5rem;
-    }
-
-    .sub-icons {
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-    }
-
+    .cat-desc { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem; }
+    .sub-icons { display: flex; gap: 0.6rem; flex-wrap: wrap; }
     .sub-icon {
-      width: 36px; height: 36px;
-      background: var(--surface3);
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      width: 36px; height: 36px; background: var(--surface3);
+      border-radius: 10px; border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      color: var(--cat-color);
-      font-size: 0.85rem;
-      transition: all 0.2s;
-      opacity: 0.6;
+      color: var(--cat-color); font-size: 0.85rem;
+      transition: all 0.2s; opacity: 0.6;
     }
-
     .category-card:hover .sub-icon {
-      border-color: var(--cat-color);
-      opacity: 1;
-      background: rgba(0,0,0,0.3);
+      border-color: var(--cat-color); opacity: 1; background: rgba(0,0,0,0.3);
     }
 
     /* ── PACKAGE VIEW ── */
-    .package-wrap {
-      animation: fadeIn 0.3s ease;
-    }
-
+    .package-wrap { animation: fadeIn 0.3s ease; }
     .pkg-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 1rem; margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
     }
-
-    .pkg-title-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
+    .pkg-title-row { display: flex; align-items: center; gap: 1rem; }
     .pkg-icon-box {
-      width: 52px; height: 52px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
+      width: 52px; height: 52px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
     }
-
-    .pkg-icon-box.ict  { color: var(--ict);      border-color: rgba(56,182,255,0.3); }
-    .pkg-icon-box.sec  { color: var(--security); border-color: rgba(255,68,102,0.3); }
-    .pkg-icon-box.pava { color: var(--pava);     border-color: rgba(168,85,247,0.3); }
-
     .pkg-name {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      font-family: 'Rajdhani', sans-serif; font-size: 2rem;
+      font-weight: 700; letter-spacing: 0.04em;
     }
-
     .pkg-count {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--text-dim); letter-spacing: 0.1em;
     }
-
     .back-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-family: 'Exo 2', sans-serif;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 50px;
+      font-family: 'Exo 2', sans-serif; font-weight: 600;
+      font-size: 0.85rem; cursor: pointer;
       display: flex; align-items: center; gap: 8px;
-      color: var(--text-dim);
-      transition: all 0.2s;
+      color: var(--text-dim); transition: all 0.2s;
     }
+    .back-btn:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent2); }
 
-    .back-btn:hover {
-      background: var(--surface3);
-      border-color: var(--accent);
-      color: var(--accent2);
-    }
-
+    /* ── TOOL ICON GRID ── */
     .tool-icons-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1.2rem;
     }
-
     .tool-icon-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem 1.5rem;
-      text-align: center;
-      cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem 1.5rem;
+      text-align: center; cursor: pointer;
       transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
       animation: fadeUp 0.4s ease both;
       --card-color: var(--accent);
     }
-
     .tool-icon-card:hover {
       transform: translateY(-5px) scale(1.02);
       border-color: var(--card-color);
       background: var(--surface3);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,0,0,0.15);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
     }
-
     .tool-big-icon {
-      font-size: 2.4rem;
-      margin-bottom: 1rem;
-      height: 64px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--card-color);
+      font-size: 2.4rem; margin-bottom: 1rem;
+      height: 64px; display: flex; align-items: center;
+      justify-content: center; color: var(--card-color);
     }
-
     .tool-icon-card h3 {
-      font-family: 'Exo 2', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1.3;
+      font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+      font-weight: 600; color: var(--text); line-height: 1.3;
     }
-
     .tool-icon-card .tool-arrow {
-      position: absolute;
-      bottom: 12px; right: 16px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      transition: all 0.2s;
+      position: absolute; bottom: 12px; right: 16px;
+      font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s;
     }
+    .tool-icon-card:hover .tool-arrow { color: var(--card-color); transform: translateX(3px); }
 
-    .tool-icon-card:hover .tool-arrow {
-      color: var(--card-color);
-      transform: translateX(3px);
-    }
-
-    /* ── TOOL CONTAINER ── */
-    .tool-container {
-      animation: fadeIn 0.3s ease;
-    }
-
+    /* ── TOOL LOADER PAGE ── */
+    .tool-container { animation: fadeIn 0.3s ease; }
     .tool-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 1rem; margin-bottom: 2rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
     }
-
-    .tool-title-row {
-      display: flex; align-items: center; gap: 12px;
-    }
-
+    .tool-title-row { display: flex; align-items: center; gap: 12px; }
     .tool-title-icon {
-      width: 44px; height: 44px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      width: 44px; height: 44px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      color: var(--accent);
+      font-size: 1.1rem; color: var(--accent);
     }
-
     .tool-title-text {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      font-family: 'Rajdhani', sans-serif; font-size: 1.6rem;
+      font-weight: 700; letter-spacing: 0.04em;
     }
-
-    /* ── FORM ELEMENTS ── */
     .tool-body {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3rem 2rem; text-align: center;
+    }
+    .tool-body-icon {
+      font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--text-muted);
+    }
+    .tool-body-label {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      letter-spacing: 0.18em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 2.5rem;
     }
 
-    .input-group {
-      margin-bottom: 1.2rem;
+    /* ── EXTERNAL LOADER ── */
+    .ext-loader-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 18px;
+      flex-wrap: wrap; max-width: 800px; margin: 0 auto;
+    }
+    .ext-loader-label {
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.15em; color: var(--text-dim);
+      text-transform: uppercase; white-space: nowrap;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ext-loader-label i { color: var(--accent); }
+    .ext-loader-input {
+      flex: 1; min-width: 200px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 14px; color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: 0.75rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .ext-loader-input:focus { border-color: var(--accent); }
+    .ext-loader-input::placeholder { color: var(--text-muted); }
+    .ext-loader-btn {
+      background: var(--accent); color: #000; border: none;
+      padding: 9px 20px; border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif; font-size: 0.95rem;
+      font-weight: 700; letter-spacing: 0.06em; cursor: pointer;
+      white-space: nowrap; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ext-loader-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+    .ext-loader-file-btn {
+      background: var(--surface2); color: var(--text-dim);
+      border: 1px solid var(--border); padding: 9px 16px;
+      border-radius: 8px; font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      white-space: nowrap; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ext-loader-file-btn:hover { border-color: var(--accent); color: var(--accent2); }
+    .ext-loader-error {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--security); letter-spacing: 0.08em;
+      padding: 6px 10px; background: rgba(255,68,102,0.08);
+      border: 1px solid rgba(255,68,102,0.2); border-radius: 6px;
+      display: none; width: 100%; margin-top: 4px;
     }
 
-    .input-group label {
-      display: block;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 8px;
+    /* ── IFRAME MODAL ── */
+    .ext-tool-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.95); z-index: 1000;
+      display: flex; align-items: stretch; justify-content: stretch;
+      animation: fadeIn 0.2s ease;
     }
-
-    .input-group input,
-    .input-group select {
-      width: 100%;
-      padding: 12px 18px;
-      background: var(--surface3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
-      -webkit-appearance: none;
+    .ext-tool-frame-wrap {
+      position: relative; flex: 1; display: flex; flex-direction: column;
     }
-
-    .input-group input:focus,
-    .input-group select:focus {
-      border-color: var(--accent);
+    .ext-tool-topbar {
+      display: flex; align-items: center;
+      justify-content: space-between; padding: 10px 18px;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      gap: 12px; flex-wrap: wrap;
     }
-
-    .input-group select option {
-      background: var(--surface3);
+    .ext-tool-name {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
     }
-
-    .inputs-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
+    .ext-close-btn {
+      background: var(--surface3); border: 1px solid var(--border);
+      color: var(--text-dim); padding: 6px 16px; border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif; font-size: 0.9rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
     }
+    .ext-close-btn:hover { border-color: var(--security); color: var(--security); }
+    .ext-tool-iframe { flex: 1; border: none; width: 100%; background: #fff; }
 
-    .calc-btn {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 0.5rem;
-      transition: all 0.2s;
+    /* ── LOGIN MODAL ── */
+    .login-modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; animation: fadeIn 0.2s ease;
+    }
+    .login-modal {
       position: relative;
-      overflow: hidden;
+      background: var(--surface2); border: 1px solid var(--login-color);
+      border-radius: 22px; padding: 2.6rem 2.2rem 2.2rem;
+      max-width: 380px; width: 100%; text-align: center;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 30px 80px rgba(0,0,0,0.6), 0 0 50px color-mix(in srgb, var(--login-color) 25%, transparent);
+      animation: fadeUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
     }
-
-    .calc-btn::before {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 0; height: 0;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
-      transform: translate(-50%,-50%);
-      transition: width 0.3s, height 0.3s, opacity 0.3s;
+    .login-modal.shake { animation: shakeX 0.4s ease; }
+    @keyframes shakeX {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
     }
-
-    .calc-btn:hover::before { width: 200px; height: 200px; opacity: 0; }
-    .calc-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,120,40,0.3); }
-    .calc-btn:active { transform: translateY(0); }
-
-    .result {
-      background: var(--surface3);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-top: 1.2rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.7;
-      color: var(--text);
+    .login-close-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface3); border: 1px solid var(--border);
+      color: var(--text-dim); cursor: pointer; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
-
-    .result-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
+    .login-close-btn:hover { border-color: var(--security); color: var(--security); }
+    .login-modal-icon {
+      width: 64px; height: 64px; margin: 0 auto 1.2rem;
+      background: var(--surface3); border: 1px solid var(--login-color);
+      border-radius: 18px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; color: var(--login-color);
     }
-    .result-item:last-child { border-bottom: none; }
-
-    .result-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-dim);
-      min-width: 120px;
+    .login-modal-title {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.5rem;
+      font-weight: 700; letter-spacing: 0.03em; color: var(--text);
+      margin-bottom: 0.3rem;
     }
-
-    .result-val {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--accent2);
+    .login-modal-sub {
+      font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.8rem;
     }
-
-    canvas {
-      background: #060609;
-      border-radius: 14px;
-      width: 100%;
-      margin-top: 1rem;
-      border: 1px solid var(--border);
-      display: block;
+    .login-field { text-align: left; margin-bottom: 1.1rem; }
+    .login-field label {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'Space Mono', monospace; font-size: 0.62rem;
+      letter-spacing: 0.12em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 6px;
     }
+    .login-field label i { color: var(--login-color); }
+    .login-field input {
+      width: 100%; background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 14px; color: var(--text);
+      font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .login-field input:focus { border-color: var(--login-color); }
+    .login-field input::placeholder { color: var(--text-muted); }
+    .login-error {
+      display: none; font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      color: var(--security); background: rgba(255,68,102,0.08);
+      border: 1px solid rgba(255,68,102,0.25); border-radius: 8px;
+      padding: 8px 12px; margin-bottom: 1rem; text-align: left;
+    }
+    .login-submit-btn {
+      width: 100%; background: var(--login-color); color: #000;
+      border: none; padding: 12px; border-radius: 10px;
+      font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+      font-weight: 700; letter-spacing: 0.05em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; margin-top: 0.3rem;
+    }
+    .login-submit-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+    /* ── MEP HOME BUTTON ── */
+    .mep-home-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,120,40,0.08);
+      border: 1px solid rgba(255,120,40,0.45);
+      color: var(--accent); font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.12em;
+      padding: 7px 18px; border-radius: 6px;
+      cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+    }
+    .mep-home-btn:hover { background: rgba(255,120,40,0.15); border-color: var(--accent2); color: var(--accent2); }
 
     /* ── FOOTER ── */
     .footer {
-      text-align: center;
-      padding: 3rem 0 2rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      color: var(--text-muted);
-      text-transform: uppercase;
+      text-align: center; padding: 3rem 0 2rem;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase;
     }
+    .footer span { color: var(--accent); animation: blink 2s ease infinite; }
 
-    .footer span {
-      color: var(--accent);
-      animation: blink 2s ease infinite;
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 2rem;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
     }
-
-    /* ── EXTERNAL TOOL LOADER ── */
-    .ext-loader-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 18px;
-      margin-bottom: 2rem;
-      animation: fadeUp 0.5s ease 0.4s both;
-      flex-wrap: wrap;
-    }
-
-    .ext-loader-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ext-loader-label i { color: var(--accent); }
-
-    .ext-loader-input {
-      flex: 1;
-      min-width: 200px;
-      background: var(--surface3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 14px;
-      color: var(--text);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .ext-loader-input:focus { border-color: var(--accent); }
-    .ext-loader-input::placeholder { color: var(--text-muted); }
-
-    .ext-loader-btn {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 9px 20px;
-      border-radius: 8px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .ext-loader-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-
-    .ext-loader-file-btn {
-      background: var(--surface3);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      padding: 9px 16px;
-      border-radius: 8px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .ext-loader-file-btn:hover { border-color: var(--accent); color: var(--accent2); }
-
-    .ext-tool-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.92);
-      z-index: 1000;
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .ext-tool-frame-wrap {
-      position: relative;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .ext-tool-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 18px;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .ext-tool-name {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ext-tool-name i { opacity: 0.7; }
-
-    .ext-close-btn {
-      background: var(--surface3);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      padding: 6px 16px;
-      border-radius: 6px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .ext-close-btn:hover { border-color: var(--security); color: var(--security); }
-
-    .ext-tool-iframe {
-      flex: 1;
-      border: none;
-      width: 100%;
-      background: #000;
-    }
-
-    .ext-loader-error {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--security);
-      letter-spacing: 0.08em;
-      padding: 6px 10px;
-      background: rgba(255,68,102,0.08);
-      border: 1px solid rgba(255,68,102,0.2);
-      border-radius: 6px;
-      display: none;
-      width: 100%;
-      margin-top: 4px;
-    }
+    .breadcrumb .sep { color: var(--accent); }
+    .breadcrumb .current { color: var(--text-dim); }
+    .breadcrumb .bread-link { cursor: pointer; transition: color 0.2s; }
+    .breadcrumb .bread-link:hover { color: var(--accent2); }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 700px) {
       .category-grid { grid-template-columns: 1fr; }
       .tool-icons-grid { grid-template-columns: 1fr 1fr; }
       .home-title { font-size: 2.2rem; }
-      .inputs-row { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 480px) {
       .tool-icons-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    /* ── BREADCRUMB ── */
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 2rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-    }
-
-    .breadcrumb .sep { color: var(--accent); }
-    .breadcrumb .current { color: var(--text-dim); }
-    .breadcrumb .bread-link { cursor: pointer; transition: color 0.2s; }
-    .breadcrumb .bread-link:hover { color: var(--accent2); }
-
-    /* ── STATUS BAR ── */
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 16px;
-      margin-bottom: 2rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-    }
-
-    .status-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: blink 1.5s ease infinite;
-    }
-
-    .status-text { color: var(--text-dim); letter-spacing: 0.1em; }
   </style>
-</head>
-<body>
 <div id="appRoot"></div>
-
 <script>
-// ─── UTILITY ───────────────────────────────────────────────
-function resultRow(label, value, unit='') {
-  return `<div class="result-item"><span class="result-label">${label}</span><span class="result-val">${value}<small style="font-size:0.7em; color:var(--text-dim); margin-left:4px">${unit}</small></span></div>`;
-}
-
-// ─── TOOL FUNCTIONS ────────────────────────────────────────
-function bandwidthCalc(mbps) {
-  if(isNaN(mbps)||mbps<=0) return '<div class="result">Enter a positive Mbps value.</div>';
-  const mbs = (mbps/8).toFixed(3);
-  const kbps = (mbps*1000).toFixed(0);
-  const gbs = (mbps/8000).toFixed(4);
-  return `<div class="result">
-    ${resultRow('DATA RATE', mbps, 'Mbps')}
-    ${resultRow('THROUGHPUT', mbs, 'MB/s')}
-    ${resultRow('IN KBPS', kbps, 'Kbps')}
-    ${resultRow('IN GB/s', gbs, 'GB/s')}
-    ${resultRow('HD VIDEO (5 Mbps)', Math.floor(mbps/5), 'streams')}
-    ${resultRow('4K VIDEO (25 Mbps)', Math.floor(mbps/25), 'streams')}
-  </div>`;
-}
-
-function thermalLoadCalc(power, area, people) {
-  const heatPeople = people * 120;
-  const total = power + heatPeople;
-  const btu = (total * 3.412).toFixed(0);
-  const tons = (total / 3517).toFixed(2);
-  const density = area > 0 ? (total/area).toFixed(1) : 'N/A';
-  return `<div class="result">
-    ${resultRow('EQUIPMENT HEAT', power, 'W')}
-    ${resultRow('OCCUPANT HEAT', heatPeople, 'W')}
-    ${resultRow('TOTAL HEAT LOAD', total.toFixed(0), 'W')}
-    ${resultRow('IN BTU/H', btu, 'BTU/h')}
-    ${resultRow('COOLING TONNAGE', tons, 'TR')}
-    ${resultRow('HEAT DENSITY', density, 'W/m²')}
-  </div>`;
-}
-
-function soundSPL(sens, power, dist) {
-  const spl = sens + 10*Math.log10(power) - 20*Math.log10(dist);
-  const splFar = sens + 10*Math.log10(power) - 20*Math.log10(dist*2);
-  const minPwr = Math.pow(10, (70 - sens + 20*Math.log10(dist)) / 10).toFixed(1);
-  return `<div class="result">
-    ${resultRow('SPL @ ' + dist + 'm', spl.toFixed(1), 'dB')}
-    ${resultRow('SPL @ ' + (dist*2) + 'm', splFar.toFixed(1), 'dB')}
-    ${resultRow('LOSS PER DOUBLE DIST.', '6', 'dB')}
-    ${resultRow('MIN PWR FOR 70dB', minPwr, 'W')}
-    ${resultRow('SENSITIVITY', sens, 'dB 1W/1m')}
-  </div>`;
-}
-
-function screenCalc(diag, aspect) {
-  const diagCm = diag * 2.54;
-  const ratio = aspect === '16:9' ? 16/9 : 4/3;
-  const w = Math.sqrt(diagCm*diagCm / (1 + 1/(ratio*ratio)));
-  const h = w / ratio;
-  const opt = (w * 1.6).toFixed(0);
-  const min = (w * 1.2).toFixed(0);
-  const max = (w * 2.0).toFixed(0);
-  return `<div class="result">
-    ${resultRow('DIAGONAL', diag + '" / ' + diagCm.toFixed(0) + 'cm', '')}
-    ${resultRow('WIDTH', w.toFixed(0), 'cm')}
-    ${resultRow('HEIGHT', h.toFixed(0), 'cm')}
-    ${resultRow('OPTIMAL DIST.', opt, 'cm')}
-    ${resultRow('MIN VIEW DIST.', min, 'cm')}
-    ${resultRow('MAX VIEW DIST.', max, 'cm')}
-  </div>`;
-}
-
-function projectorCalc(widthCm, tr) {
-  const dist = (widthCm/100) * tr;
-  const lumens = Math.ceil((widthCm/30) * 80);
-  const shortTR = 0.4;
-  const shortDist = (widthCm/100) * shortTR;
-  return `<div class="result">
-    ${resultRow('SCREEN WIDTH', widthCm, 'cm')}
-    ${resultRow('THROW RATIO', tr, ':1')}
-    ${resultRow('THROW DISTANCE', dist.toFixed(2), 'm')}
-    ${resultRow('SHORT THROW DIST.', shortDist.toFixed(2), 'm (TR 0.4)')}
-    ${resultRow('REC. LUMENS', lumens, 'lm')}
-  </div>`;
-}
-
-function controlRoomDesign(monitors, depthCm, widthM) {
-  const minWidth = (monitors * 0.55).toFixed(1);
-  const viewDist = (depthCm/100 * 1.2).toFixed(1);
-  const rows = Math.ceil(monitors / 6);
-  return `<div class="result">
-    ${resultRow('MONITORS', monitors, 'units')}
-    ${resultRow('MIN DESK WIDTH', minWidth, 'm')}
-    ${resultRow('VIEWING DISTANCE', viewDist, 'm')}
-    ${resultRow('ROOM WIDTH REQ.', widthM + 'm+', '')}
-    ${resultRow('SUGGESTED ROWS', rows, 'rows')}
-  </div>`;
-}
-
-// ─── WIFI HEATMAP ──────────────────────────────────────────
-class WifiHeatmap {
-  constructor(canvasId, w, h) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.width = w || 500; this.height = h || 280;
-    this.canvas.width = this.width; this.canvas.height = this.height;
-    this.aps = [{x:0.3,y:0.4,power:20},{x:0.7,y:0.6,power:20}];
-    this.dragIndex = -1;
-    this.initEvents(); this.draw();
-  }
-  setAPs(aps) { this.aps = aps; this.draw(); }
-  initEvents() {
-    const getPos = (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      let x = (e.clientX - rect.left) * (this.width/rect.width);
-      let y = (e.clientY - rect.top) * (this.height/rect.height);
-      return {x: Math.min(Math.max(0,x), this.width), y: Math.min(Math.max(0,y), this.height)};
-    };
-    this.canvas.addEventListener('mousedown', (e) => {
-      const {x,y} = getPos(e);
-      for(let i=0;i<this.aps.length;i++) {
-        const ax = this.aps[i].x*this.width, ay = this.aps[i].y*this.height;
-        if(Math.hypot(x-ax, y-ay) < 22) { this.dragIndex = i; break; }
-      }
-      if(this.dragIndex !== -1) e.preventDefault();
-    });
-    window.addEventListener('mousemove', (e) => {
-      if(this.dragIndex !== -1) {
-        const {x,y} = getPos(e);
-        this.aps[this.dragIndex].x = x/this.width;
-        this.aps[this.dragIndex].y = y/this.height;
-        this.draw(); this.updateDisplay();
-      }
-    });
-    window.addEventListener('mouseup', () => { this.dragIndex = -1; });
-  }
-  draw() {
-    let img = this.ctx.getImageData(0,0,this.width,this.height);
-    for(let py=0;py<this.height;py++) for(let px=0;px<this.width;px++) {
-      let sum = 0;
-      for(let ap of this.aps) {
-        const dx = (px/this.width - ap.x)*this.width, dy = (py/this.height - ap.y)*this.height;
-        let sig = ap.power - Math.min(60, 20*Math.log10(Math.hypot(dx,dy)+0.5)+25);
-        sig = Math.min(-30, Math.max(-85, sig));
-        sum += (sig+85)/55;
-      }
-      const inten = Math.min(1, sum/this.aps.length);
-      const r = Math.min(255, inten>0.5 ? 255 : inten*2*255);
-      const g = Math.min(255, inten>0.5 ? (1-inten)*2*255 : inten*2*255);
-      const b = Math.min(255, inten<0.3 ? (0.3-inten)/0.3*180 : 0);
-      const idx = (py*this.width + px)*4;
-      img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=200;
-    }
-    this.ctx.putImageData(img,0,0);
-    for(const ap of this.aps) {
-      const cx = ap.x*this.width, cy = ap.y*this.height;
-      this.ctx.beginPath(); this.ctx.arc(cx,cy,16,0,2*Math.PI);
-      this.ctx.fillStyle='rgba(255,255,255,0.15)'; this.ctx.fill();
-      this.ctx.strokeStyle='#ff7828'; this.ctx.lineWidth=2; this.ctx.stroke();
-      this.ctx.fillStyle='white'; this.ctx.font='bold 14px monospace';
-      this.ctx.textAlign='center'; this.ctx.textBaseline='middle';
-      this.ctx.fillText('📡', cx, cy);
-    }
-  }
-  updateDisplay() {
-    const el = document.getElementById('apCoordsDisplay');
-    if(el) el.innerText = this.aps.map((ap,i)=>`AP${i+1}: (${(ap.x*100).toFixed(0)}%, ${(ap.y*100).toFixed(0)}%)`).join('   ');
-  }
-}
-
-// ─── CCTV FOV ──────────────────────────────────────────────
-function drawCCTVFOV(canvasId, sensorMM, focalMM, distM) {
-  const c = document.getElementById(canvasId); if(!c) return;
-  const ctx = c.getContext('2d'); const w=500, h=320;
-  c.width=w; c.height=h;
-  ctx.fillStyle='#060609'; ctx.fillRect(0,0,w,h);
-
-  // Grid
-  ctx.strokeStyle='rgba(255,120,40,0.08)'; ctx.lineWidth=1;
-  for(let x=0;x<w;x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-  for(let y=0;y<h;y+=40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-
-  const fovRad = 2*Math.atan(sensorMM/(2*focalMM));
-  const fovDeg = (fovRad*180/Math.PI).toFixed(1);
-  const half = fovRad/2;
-  const widthAtDist = 2*distM*Math.tan(half);
-  const scale = Math.min((w-80)/(distM*1.1), (h-80)/(widthAtDist+1));
-  const tipX=60, tipY=h/2;
-  const lenPx = distM * scale;
-  const halfWidthPx = Math.tan(half)*lenPx;
-  const leftY = tipY - halfWidthPx, rightY = tipY + halfWidthPx;
-
-  // FOV fill
-  ctx.beginPath(); ctx.moveTo(tipX,tipY); ctx.lineTo(tipX+lenPx, leftY); ctx.lineTo(tipX+lenPx, rightY); ctx.closePath();
-  const grad = ctx.createLinearGradient(tipX,0, tipX+lenPx,0);
-  grad.addColorStop(0,'rgba(255,120,40,0.4)'); grad.addColorStop(1,'rgba(255,120,40,0.05)');
-  ctx.fillStyle=grad; ctx.fill();
-  ctx.strokeStyle='#ff7828'; ctx.lineWidth=1.5; ctx.stroke();
-
-  // Camera
-  ctx.beginPath(); ctx.arc(tipX,tipY,10,0,2*Math.PI);
-  ctx.fillStyle='#ff7828'; ctx.fill();
-  ctx.fillStyle='white'; ctx.font='bold 10px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText('●', tipX, tipY);
-
-  // Coverage line
-  ctx.beginPath(); ctx.moveTo(tipX+lenPx, leftY); ctx.lineTo(tipX+lenPx, rightY);
-  ctx.strokeStyle='rgba(255,170,85,0.6)'; ctx.lineWidth=2; ctx.stroke();
-
-  // Labels
-  ctx.fillStyle='rgba(255,120,40,0.8)'; ctx.font='600 11px monospace'; ctx.textAlign='left'; ctx.textBaseline='top';
-  ctx.fillText(`FOV: ${fovDeg}°`, tipX+5, 10);
-  ctx.fillText(`COVERAGE: ${widthAtDist.toFixed(1)}m @ ${distM}m`, tipX+5, 26);
-
-  // Distance label
-  ctx.setLineDash([4,4]);
-  ctx.beginPath(); ctx.moveTo(tipX,tipY+halfWidthPx+15); ctx.lineTo(tipX+lenPx,tipY+halfWidthPx+15);
-  ctx.strokeStyle='rgba(255,120,40,0.4)'; ctx.lineWidth=1; ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle='#ffaa55'; ctx.font='10px monospace'; ctx.textAlign='center';
-  ctx.fillText(distM+'m', tipX + lenPx/2, tipY+halfWidthPx+20);
-}
-
-// ─── SECURITY SVG ICON ─────────────────────────────────────
-const securitySVG = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="24,4 42,12 42,28 24,44 6,28 6,12" fill="none" stroke="#ff4466" stroke-width="2"/>
-  <polygon points="24,10 36,16 36,28 24,38 12,28 12,16" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.4)" stroke-width="1"/>
-  <circle cx="24" cy="22" r="6" fill="none" stroke="#ff4466" stroke-width="1.5"/>
-  <circle cx="24" cy="22" r="2" fill="#ff4466"/>
-  <line x1="24" y1="10" x2="24" y2="16" stroke="#ff4466" stroke-width="1.5"/>
-  <line x1="24" y1="28" x2="24" y2="38" stroke="#ff4466" stroke-width="1"/>
-</svg>`;
-
-// ─── RENDER HOME ────────────────────────────────────────────
 const app = document.getElementById('appRoot');
 
-const categories = [
-  {
-    id: 'ict',
-    tag: 'NETWORK & INFRASTRUCTURE',
-    title: 'ICT TOOLS',
-    desc: 'Bandwidth, thermal & Wi-Fi analysis',
-    iconClass: 'ict',
-    color: 'var(--ict)',
-    icon: '<i class="fas fa-network-wired"></i>',
-    subIcons: ['fa-tachometer-alt','fa-temperature-high','fa-wifi','fa-server','fa-diagram-project'],
-    tools: [
-      { name:'Bandwidth Calculator', icon:'fas fa-tachometer-alt', toolId:'bandwidth' },
-      { name:'Thermal / Heat Load Calculator', icon:'fas fa-temperature-high', toolId:'thermal' },
-      { name:'Wi-Fi Heatmap Visualizations Tool', icon:'fas fa-wifi', toolId:'wifi' },
-      { name:'Telecom Room Design', icon:'fas fa-server', toolId:'telecom' },
-      { name:'Schematic Diagram Drawing Tool', icon:'fas fa-diagram-project', toolId:'schematic' }
-    ]
-  },
-  {
-    id: 'security',
-    tag: 'SURVEILLANCE & CONTROL',
-    title: 'SECURITY TOOLS',
-    desc: 'CCTV coverage & control room layout',
-    iconClass: 'sec',
-    color: 'var(--security)',
-    icon: securitySVG,
-    subIcons: ['fa-video','fa-camera-rotate','fa-desktop'],
-    tools: [
-      { name:'CCTV FOV Drawing Tool', icon:'fas fa-video', toolId:'cctv' },
-      { name:'Video Installation & Surveillance Tilt Analyzer Tool', icon:'fas fa-camera-rotate', toolId:'tilt-analyzer' },
-      { name:'Control Room Design Tool', icon:'fas fa-desktop', toolId:'controlroom' }
-    ]
-  },
-  {
-    id: 'pava',
-    tag: 'AUDIO & VISUAL SYSTEMS',
-    title: 'PA/AV TOOLS',
-    desc: 'Sound, screen & projection design',
-    iconClass: 'pava',
-    color: 'var(--pava)',
-    icon: '<i class="fas fa-chalkboard-user"></i>',
-    subIcons: ['fa-music','fa-tv','fa-film'],
-    tools: [
-      { name:'Sound System Design Tool', icon:'fas fa-music', toolId:'sound' },
-      { name:'Screen Size Calculator TOOL', icon:'fas fa-tv', toolId:'screen' },
-      { name:'Projector Design Tool', icon:'fas fa-film', toolId:'projector' }
-    ]
-  }
-];
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
 
-// ─── EXTERNAL TOOL MODAL ────────────────────────────────────
-function openExternalToolModal(src, label, isBlob) {
-  const modal = document.createElement('div');
-  modal.className = 'ext-tool-modal';
-
-  let iframeSrc = '';
-  let blobUrl = '';
-
-  if (isBlob) {
-    // File was read as text — wrap in blob URL
-    const blob = new Blob([src], { type: 'text/html' });
-    blobUrl = URL.createObjectURL(blob);
-    iframeSrc = blobUrl;
-  } else {
-    iframeSrc = src;
-  }
-
-  const shortLabel = label.length > 60 ? '…' + label.slice(-57) : label;
-
-  modal.innerHTML = `
-    <div class="ext-tool-frame-wrap">
-      <div class="ext-tool-topbar">
-        <span class="ext-tool-name">
-          <i class="fas fa-file-code"></i>
-          EXTERNAL TOOL &nbsp;—&nbsp; ${shortLabel}
-        </span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="ext-close-btn" id="extCloseBtn"><i class="fas fa-times"></i> CLOSE</button>
-        </div>
-      </div>
-      <iframe class="ext-tool-iframe" id="extToolIframe" src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups"></iframe>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  document.getElementById('extCloseBtn').addEventListener('click', () => {
-    document.body.removeChild(modal);
-    if (blobUrl) URL.revokeObjectURL(blobUrl);
-  });
-
-  // Escape key closes modal
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      document.body.removeChild(modal);
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-}
-
-// ─── MEP DISCIPLINES ────────────────────────────────────────
 const disciplines = [
   {
     id: 'electrical',
@@ -1186,13 +2178,14 @@ const disciplines = [
     desc: 'Load schedules, single-line diagrams & lighting',
     color: 'var(--electrical)',
     iconHtml: '<i class="fas fa-bolt"></i>',
-    subIcons: ['fa-lightbulb','fa-plug-circle-bolt','fa-table-cells','fa-cloud-bolt'],
-    isEmpty: false,
+    subIcons: ['fa-lightbulb','fa-plug-circle-bolt','fa-table-cells','fa-cloud-bolt','fa-bell'],
+    auth: { email: 'ELEC.MEP@sshic.com', password: 'Elec#1111$' },
     tools: [
-      { name:'Lighting System Design Tools', icon:'fas fa-lightbulb', toolId:'lighting' },
-      { name:'Power System Analysis Tools', icon:'fas fa-plug-circle-bolt', toolId:'power' },
-      { name:'Panel SLD Design Tools', icon:'fas fa-table-cells', toolId:'panel-sld' },
-      { name:'Earthing / Lightning Protection Systems Design Tools', icon:'fas fa-cloud-bolt', toolId:'earthing' }
+      { name:'Lighting System Design Tools',                         icon:'fas fa-lightbulb',        toolId:'lighting'  },
+      { name:'Power System Analysis Tools',                          icon:'fas fa-plug-circle-bolt', toolId:'power'     },
+      { name:'Panel SLD Design Tools',                               icon:'fas fa-table-cells',      toolId:'panel-sld' },
+      { name:'Earthing / Lightning Protection Systems Design Tools', icon:'fas fa-cloud-bolt',       toolId:'earthing'  },
+      { name:'Fire Alarm System Design Tools',                       icon:'fas fa-bell',             toolId:'fire-alarm'}
     ]
   },
   {
@@ -1202,24 +2195,14 @@ const disciplines = [
     desc: 'HVAC loads, duct sizing & pipe flow',
     color: 'var(--mechanical)',
     iconHtml: '<i class="fas fa-wind"></i>',
-    subIcons: ['fa-temperature-half','fa-gauge','fa-droplet'],
-    isEmpty: false,
-    tools: {
-      hvac: [
-        { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-half', toolId:'hvac-load' },
-        { name:'Duct Sizing & Air Distribution Design Tool', icon:'fas fa-wind', toolId:'duct-sizing' }
-      ],
-      firefighting: [
-        { name:'Sprinkler Spacing & Coverage Design Tool', icon:'fas fa-fire-extinguisher', toolId:'sprinkler' },
-        { name:'Pipe Pressure Drop Design Tool', icon:'fas fa-droplet', toolId:'pipe-pressure' }
-      ]
-    }
+    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line','fa-shower','fa-gauge-high'],
+    auth: { email: 'MECH.MEP@sshic.com', password: 'Mech#2222$' },
   },
   {
     id: 'ict',
     tag: 'NETWORKS, SECURITY & AV',
     title: 'ICT Design Tools',
-    desc: 'ICT, Security & PA/VA engineering toolkits',
+    desc: 'ICT, Security & PA/AV engineering toolkits',
     color: 'var(--ict-disc)',
     iconHtml: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
       <rect x="6" y="10" width="36" height="24" rx="3" fill="none" stroke="#38b6ff" stroke-width="2"/>
@@ -1231,9 +2214,192 @@ const disciplines = [
       <text x="24" y="30" text-anchor="middle" font-family="Rajdhani,sans-serif" font-size="10" font-weight="700" fill="#38b6ff">ICT</text>
     </svg>`,
     subIcons: ['fa-network-wired','fa-shield-halved','fa-music'],
-    isEmpty: false
+    auth: { email: 'ICT.MEP@sshic.com', password: 'ICT#3333$' },
   }
 ];
+
+const mechPackages = [
+  {
+    id: 'hvac',
+    tag: 'HVAC SYSTEMS',
+    title: 'HVAC Systems',
+    desc: 'Load calculation, energy analysis & duct distribution',
+    icon: '<i class="fas fa-wind"></i>',
+    color: 'var(--hvac)',
+    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line'],
+    tools: [
+      { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-arrow-up',         toolId:'hvac-load'   },
+      { name:'Duct Sizing & Air Distribution Design Tool',          icon:'fas fa-arrows-left-right-to-line',    toolId:'duct-sizing' }
+    ]
+  },
+  {
+    id: 'firefighting',
+    tag: 'FIRE FIGHTING & PLUMBING SYSTEMS',
+    title: 'Fire Fighting & Plumbing',
+    desc: 'Sprinkler hydraulics, agent systems & sanitary design',
+    icon: '<i class="fas fa-fire-extinguisher"></i>',
+    color: 'var(--firefighting)',
+    subIcons: ['fa-shower','fa-shield-halved','fa-droplet'],
+    tools: [
+      { name:'Fire Sprinkler Network Design Tool', icon:'fas fa-shower',         toolId:'sprinkler'    },
+      { name:'Agent Pro Design Tool',             icon:'fas fa-shield-halved',  toolId:'agent-pro'    },
+      { name:'Hydro‑Sanitary Design Tool',        icon:'fas fa-droplet',        toolId:'hydro-sanit'  }
+    ]
+  }
+];
+
+const ictCategories = [
+  {
+    id: 'ict',
+    tag: 'NETWORK & INFRASTRUCTURE',
+    title: 'ICT TOOLS',
+    desc: 'Bandwidth, thermal & Wi-Fi analysis',
+    color: 'var(--ict)',
+    icon: '<i class="fas fa-network-wired"></i>',
+    iconClass: 'ict',
+    subIcons: ['fa-tachometer-alt','fa-temperature-high','fa-wifi','fa-server','fa-diagram-project'],
+    tools: [
+      { name:'Bandwidth Calculator',              icon:'fas fa-tachometer-alt',  toolId:'bandwidth' },
+      { name:'Thermal / Heat Load Calculator',    icon:'fas fa-temperature-high',toolId:'thermal'   },
+      { name:'Wi-Fi Heatmap Visualizations Tool', icon:'fas fa-wifi',            toolId:'wifi'      },
+      { name:'Telecom Room Design',               icon:'fas fa-server',          toolId:'telecom'   },
+      { name:'Schematic Diagram Drawing Tool',    icon:'fas fa-diagram-project', toolId:'schematic' }
+    ]
+  },
+  {
+    id: 'security',
+    tag: 'SURVEILLANCE & CONTROL',
+    title: 'SECURITY TOOLS',
+    desc: 'CCTV coverage & control room layout',
+    color: 'var(--security)',
+    icon: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="24,4 42,12 42,28 24,44 6,28 6,12" fill="none" stroke="#ff4466" stroke-width="2"/>
+      <polygon points="24,10 36,16 36,28 24,38 12,28 12,16" fill="rgba(255,68,102,0.1)" stroke="rgba(255,68,102,0.4)" stroke-width="1"/>
+      <circle cx="24" cy="22" r="6" fill="none" stroke="#ff4466" stroke-width="1.5"/>
+      <circle cx="24" cy="22" r="2" fill="#ff4466"/>
+      <line x1="24" y1="10" x2="24" y2="16" stroke="#ff4466" stroke-width="1.5"/>
+      <line x1="24" y1="28" x2="24" y2="38" stroke="#ff4466" stroke-width="1"/>
+    </svg>`,
+    iconClass: 'sec',
+    subIcons: ['fa-video','fa-camera-rotate','fa-desktop'],
+    tools: [
+      { name:'CCTV FOV Drawing Tool',                               icon:'fas fa-video',         toolId:'cctv'          },
+      { name:'Video Installation & Surveillance Tilt Analyzer Tool',icon:'fas fa-camera-rotate', toolId:'tilt-analyzer' },
+      { name:'Control Room Design Tool',                            icon:'fas fa-desktop',       toolId:'controlroom'   }
+    ]
+  },
+  {
+    id: 'pava',
+    tag: 'AUDIO & VISUAL SYSTEMS',
+    title: 'PA/AV TOOLS',
+    desc: 'Sound, screen & projection design',
+    color: 'var(--pava)',
+    icon: '<i class="fas fa-chalkboard-user"></i>',
+    iconClass: 'pava',
+    subIcons: ['fa-music','fa-tv','fa-film'],
+    tools: [
+      { name:'Sound System Design Tool',    icon:'fas fa-music', toolId:'sound'     },
+      { name:'Screen Size Calculator Tool', icon:'fas fa-tv',    toolId:'screen'    },
+      { name:'Projector Design Tool',       icon:'fas fa-film',  toolId:'projector' }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// EXTERNAL TOOL MODAL
+// ═══════════════════════════════════════════════════════════════
+
+function openExternalToolModal(src, label, isBlob) {
+  const modal = document.createElement('div');
+  modal.className = 'ext-tool-modal';
+  let blobUrl = '';
+  const iframeSrc = isBlob ? (blobUrl = URL.createObjectURL(new Blob([src], {type:'text/html'}))) : src;
+  const shortLabel = label.length > 60 ? '…' + label.slice(-57) : label;
+  modal.innerHTML = `
+    <div class="ext-tool-frame-wrap">
+      <div class="ext-tool-topbar">
+        <span class="ext-tool-name"><i class="fas fa-file-code"></i> EXTERNAL TOOL &nbsp;—&nbsp; ${shortLabel}</span>
+        <button class="ext-close-btn" id="extCloseBtn"><i class="fas fa-times"></i> CLOSE</button>
+      </div>
+      <iframe class="ext-tool-iframe" src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-same-origin allow-modals allow-popups"></iframe>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('extCloseBtn').onclick = () => {
+    document.body.removeChild(modal);
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  };
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { document.body.removeChild(modal); if (blobUrl) URL.revokeObjectURL(blobUrl); document.removeEventListener('keydown', esc); }
+  });
+}
+
+function wireExtLoader() {
+  const filePickBtn = document.getElementById('extFilePickBtn');
+  const filePicker  = document.getElementById('extFilePicker');
+  const pathInput   = document.getElementById('extPathInput');
+  const loadBtn     = document.getElementById('extLoadBtn');
+  const errorEl     = document.getElementById('extLoaderError');
+  filePickBtn.onclick = () => filePicker.click();
+  filePicker.onchange = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { pathInput.value = file.name; openExternalToolModal(ev.target.result, file.name, true); };
+    reader.readAsText(file); filePicker.value = '';
+  };
+  loadBtn.onclick = () => {
+    const val = pathInput.value.trim(); errorEl.style.display = 'none';
+    if (!val) { errorEl.textContent = '⚠ Enter a file path or URL first.'; errorEl.style.display = 'block'; return; }
+    openExternalToolModal(val, val, false);
+  };
+  pathInput.onkeydown = (e) => { if (e.key === 'Enter') loadBtn.click(); };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED LOADER PAGE
+// ═══════════════════════════════════════════════════════════════
+
+function loaderPage({ breadcrumbs, toolName, toolIcon, toolColor, backFn }) {
+  app.innerHTML = `
+    <div class="tool-container">
+      <div class="breadcrumb">
+        ${breadcrumbs.map((b, i) =>
+          i < breadcrumbs.length - 1
+            ? `<span class="bread-link" data-idx="${i}">${b.label}</span><span class="sep">›</span>`
+            : `<span class="current">${b.label}</span>`
+        ).join('')}
+      </div>
+      <div class="tool-header">
+        <div class="tool-title-row">
+          <div class="tool-title-icon" style="color:${toolColor}; border-color:${toolColor}55">${toolIcon}</div>
+          <span class="tool-title-text">${toolName}</span>
+        </div>
+        <button class="back-btn" id="loaderBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+      </div>
+      <div class="tool-body">
+        <div class="tool-body-icon"><i class="fas fa-folder-open"></i></div>
+        <div class="tool-body-label">Select &amp; load the external tool file</div>
+        <div class="ext-loader-bar">
+          <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
+          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Browse or enter path / URL…">
+          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
+          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
+          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
+          <span class="ext-loader-error" id="extLoaderError"></span>
+        </div>
+      </div>
+      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
+    </div>`;
+  document.getElementById('loaderBackBtn').onclick = backFn;
+  document.querySelectorAll('.bread-link').forEach(el => {
+    const idx = +el.getAttribute('data-idx');
+    el.onclick = breadcrumbs[idx].fn;
+  });
+  wireExtLoader();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════════════════
 
 function renderHome() {
   app.innerHTML = `
@@ -1252,60 +2418,106 @@ function renderHome() {
       <p class="home-sub">Electrical &nbsp;·&nbsp; Mechanical &nbsp;·&nbsp; ICT Engineering Suites</p>
       <div class="home-divider"><span>SELECT DISCIPLINE</span></div>
     </div>
-
     <div class="category-grid">
       ${disciplines.map((d, i) => `
         <div class="category-card" data-disc="${d.id}" style="--cat-color:${d.color}; animation-delay:${0.1+i*0.1}s">
           <div class="cat-corner-glow"></div>
           <div class="cat-tag">${d.tag}</div>
-          <div class="main-icon-wrap">
-            ${d.iconHtml}
-          </div>
+          <div class="main-icon-wrap">${d.iconHtml}</div>
           <div class="cat-title">${d.title}</div>
           <div class="cat-desc">${d.desc}</div>
-          <div class="sub-icons">
-            ${d.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-          ${d.isEmpty ? `<div style="margin-top:1rem; display:inline-flex; align-items:center; gap:6px; background:rgba(0,0,0,0.3); border:1px solid ${d.color}30; border-radius:20px; padding:4px 12px; font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; color:${d.color}; opacity:0.7"><i class="fas fa-clock"></i> COMING SOON</div>` : ''}
-        </div>
-      `).join('')}
+          <div class="sub-icons">${d.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-
-    <div class="footer"><span>■</span> MEP DESIGN PLATFORM &nbsp;·&nbsp; v3.0 &nbsp;·&nbsp; ALL SYSTEMS OPERATIONAL</div>
-  `;
-  document.querySelectorAll('.category-card').forEach(card => {
-    const discId = card.getAttribute('data-disc');
-    const disc = disciplines.find(d => d.id === discId);
-    card.addEventListener('click', () => {
-      if (disc.isEmpty) return;
-      renderDiscipline(discId);
-    });
-    if (disc.isEmpty) card.style.cursor = 'default';
+    <div class="footer"><span>■</span> MEP DESIGN PLATFORM &nbsp;·&nbsp; v4.0</div>`;
+  document.querySelectorAll('[data-disc]').forEach(card => {
+    card.onclick = () => {
+      const id = card.getAttribute('data-disc');
+      const disc = disciplines.find(d => d.id === id);
+      const goTo = () => {
+        if (id === 'electrical') renderElectricalHome();
+        else if (id === 'mechanical') renderMechanicalHome();
+        else if (id === 'ict') renderICTHome();
+      };
+      openLoginModal(disc, goTo);
+    };
   });
 }
 
-// ─── ICT DISCIPLINE VIEW (mid-level) ────────────────────────
-function renderDiscipline(discId) {
-  if (discId === 'ict') renderICTHome();
-  else if (discId === 'electrical') renderElectricalHome();
-  else if (discId === 'mechanical') renderMechanicalHome();
+function openLoginModal(disc, onSuccess) {
+  const overlay = document.createElement('div');
+  overlay.className = 'login-modal-overlay';
+  overlay.innerHTML = `
+    <div class="login-modal" style="--login-color:${disc.color}">
+      <button class="login-close-btn" id="loginCloseBtn"><i class="fas fa-times"></i></button>
+      <div class="login-modal-icon">${disc.iconHtml}</div>
+      <div class="login-modal-title">${disc.title}</div>
+      <div class="login-modal-sub">Sign in to access this discipline</div>
+      <div class="login-field">
+        <label><i class="fas fa-envelope"></i> Enter Your Mail</label>
+        <input type="email" id="loginEmail" placeholder="name@company.com" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="off">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="login-submit-btn" id="loginSubmitBtn"><i class="fas fa-arrow-right-to-bracket"></i> SIGN IN</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const emailEl = document.getElementById('loginEmail');
+  const passEl  = document.getElementById('loginPassword');
+  const errEl   = document.getElementById('loginError');
+
+  const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+
+  const attemptLogin = () => {
+    const email = emailEl.value.trim();
+    const pass  = passEl.value;
+    if (!email || !pass) {
+      errEl.textContent = '⚠ Please enter both email and password.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (email.toLowerCase() === disc.auth.email.toLowerCase() && pass === disc.auth.password) {
+      closeModal();
+      onSuccess();
+    } else {
+      errEl.textContent = '⚠ Incorrect email or password.';
+      errEl.style.display = 'block';
+      const modal = overlay.querySelector('.login-modal');
+      modal.classList.remove('shake'); void modal.offsetWidth; modal.classList.add('shake');
+    }
+  };
+
+  document.getElementById('loginSubmitBtn').onclick = attemptLogin;
+  document.getElementById('loginCloseBtn').onclick = closeModal;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  [emailEl, passEl].forEach(el => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); }));
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', esc); }
+  });
+  setTimeout(() => emailEl.focus(), 50);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ELECTRICAL
+// ═══════════════════════════════════════════════════════════════
 
 function renderElectricalHome() {
   const disc = disciplines.find(d => d.id === 'electrical');
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">ELECTRICAL DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">ELECTRICAL DESIGN TOOLS</h1>
       <p class="home-sub">Power &nbsp;·&nbsp; Lighting &nbsp;·&nbsp; Protection Systems</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT TOOL</span></div>
     </div>
@@ -1315,94 +2527,72 @@ function renderElectricalHome() {
           <div class="tool-big-icon"><i class="${t.icon}"></i></div>
           <h3>${t.name}</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      `).join('')}
-      <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${disc.tools.length*0.08}s; border-style:dashed; --card-color:var(--electrical)">
+        </div>`).join('')}
+      <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${disc.tools.length*0.08}s; border-style:dashed; --card-color:var(--electrical)">
         <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
         <h3>Load External File</h3>
         <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
       </div>
     </div>
-    <div class="footer"><span>■</span> ELECTRICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
+    <div class="footer"><span>■</span> ELECTRICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
   document.getElementById('btnMepHome').onclick = renderHome;
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') renderGenericLoadTool('electrical', 'ELECTRICAL DESIGN TOOLS', renderElectricalHome);
-      else renderGenericTool('electrical', toolId, disc.tools, 'var(--electrical)', renderElectricalHome);
-    });
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'<i class="fas fa-folder-open"></i>' }
+        : disc.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'ELECTRICAL DESIGN TOOLS', fn: renderElectricalHome },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: toolId === '__load__' ? '<i class="fas fa-folder-open"></i>' : `<i class="${tool.icon}"></i>`,
+        toolColor: 'var(--electrical)',
+        backFn: renderElectricalHome
+      });
+    };
   });
 }
 
-// ─── MECHANICAL DATA ────────────────────────────────────────
-const mechPackages = [
-  {
-    id: 'hvac',
-    tag: 'HVAC SYSTEMS',
-    title: 'HVAC Systems',
-    desc: 'Load calculation, energy analysis & duct distribution',
-    icon: '<i class="fas fa-wind"></i>',
-    color: 'var(--hvac)',
-    subIcons: ['fa-temperature-arrow-up','fa-arrows-left-right-to-line'],
-    tools: [
-      { name:'HVAC Load Calculation & Energy Analysis Design Tool', icon:'fas fa-temperature-arrow-up', toolId:'hvac-load' },
-      { name:'Duct Sizing & Air Distribution Design Tool', icon:'fas fa-arrows-left-right-to-line', toolId:'duct-sizing' }
-    ]
-  },
-  {
-    id: 'firefighting',
-    tag: 'FIRE FIGHTING & PLUMBING SYSTEMS',
-    title: 'Fire Fighting & Plumbing',
-    desc: 'Sprinkler coverage & pipe pressure drop analysis',
-    icon: '<i class="fas fa-fire-extinguisher"></i>',
-    color: 'var(--firefighting)',
-    subIcons: ['fa-shower','fa-gauge-high'],
-    tools: [
-      { name:'Sprinkler Spacing & Coverage Design Tool', icon:'fas fa-shower', toolId:'sprinkler' },
-      { name:'Pipe Pressure Drop Design Tool', icon:'fas fa-gauge-high', toolId:'pipe-pressure' }
-    ]
-  }
-];
+// ═══════════════════════════════════════════════════════════════
+// MECHANICAL
+// ═══════════════════════════════════════════════════════════════
 
 function renderMechanicalHome() {
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">MECHANICAL DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">MECHANICAL DESIGN TOOLS</h1>
       <p class="home-sub">HVAC &nbsp;·&nbsp; Fire Fighting &nbsp;·&nbsp; Plumbing Systems</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHome" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT PACKAGE</span></div>
     </div>
-    <div class="category-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px,1fr))">
+    <div class="category-grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
       ${mechPackages.map((pkg, i) => `
-        <div class="category-card" data-mech-pkg="${pkg.id}" style="--cat-color:${pkg.color}; animation-delay:${0.1+i*0.1}s; cursor:pointer">
+        <div class="category-card" data-mech-pkg="${pkg.id}" style="--cat-color:${pkg.color}; animation-delay:${0.1+i*0.1}s">
           <div class="cat-corner-glow"></div>
           <div class="cat-tag">${pkg.tag}</div>
-          <div class="main-icon-wrap" style="color:${pkg.color}; font-size:2rem">${pkg.icon}</div>
+          <div class="main-icon-wrap" style="color:${pkg.color}">${pkg.icon}</div>
           <div class="cat-title">${pkg.title}</div>
           <div class="cat-desc">${pkg.desc}</div>
-          <div class="sub-icons">
-            ${pkg.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-        </div>
-      `).join('')}
+          <div class="sub-icons">${pkg.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-    <div class="footer"><span>■</span> MECHANICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
+    <div class="footer"><span>■</span> MECHANICAL DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
   document.getElementById('btnMepHome').onclick = renderHome;
   document.querySelectorAll('[data-mech-pkg]').forEach(card => {
-    card.addEventListener('click', () => renderMechPackage(card.getAttribute('data-mech-pkg')));
+    card.onclick = () => renderMechPackage(card.getAttribute('data-mech-pkg'));
   });
 }
 
@@ -1411,19 +2601,19 @@ function renderMechPackage(pkgId) {
   app.innerHTML = `
     <div class="package-wrap">
       <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeMech">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrMechDisc">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrHome">MEP PLATFORM</span><span class="sep">›</span>
+        <span class="bread-link" id="bcrMech">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
         <span class="current">${pkg.title.toUpperCase()}</span>
       </div>
       <div class="pkg-header">
         <div class="pkg-title-row">
-          <div class="pkg-icon-box" style="color:${pkg.color}; border-color:${pkg.color}40; background:${pkg.color}14; font-size:1.4rem">${pkg.icon}</div>
+          <div class="pkg-icon-box" style="color:${pkg.color}; border-color:${pkg.color}55; background:${pkg.color}12">${pkg.icon}</div>
           <div>
             <div class="pkg-name">${pkg.title}</div>
             <div class="pkg-count">${pkg.tools.length} TOOLS AVAILABLE</div>
           </div>
         </div>
-        <button class="back-btn" id="backMechHome"><i class="fas fa-arrow-left"></i> Mechanical Design Tools</button>
+        <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i> Mechanical Design Tools</button>
       </div>
       <div class="tool-icons-grid">
         ${pkg.tools.map((t, i) => `
@@ -1431,204 +2621,80 @@ function renderMechPackage(pkgId) {
             <div class="tool-big-icon"><i class="${t.icon}"></i></div>
             <h3>${t.name}</h3>
             <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-          </div>
-        `).join('')}
-        <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${pkg.tools.length*0.08}s; border-style:dashed; --card-color:${pkg.color}">
+          </div>`).join('')}
+        <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${pkg.tools.length*0.08}s; border-style:dashed; --card-color:${pkg.color}">
           <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
           <h3>Load External File</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
       </div>
       <div class="footer"><span>■</span> ${pkg.title.toUpperCase()} &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backMechHome').onclick = renderMechanicalHome;
-  document.getElementById('bcrHomeMech').onclick = renderHome;
-  document.getElementById('bcrMechDisc').onclick = renderMechanicalHome;
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+    </div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
+  document.getElementById('bcrMech').onclick = renderMechanicalHome;
+  document.getElementById('backBtn').onclick = renderMechanicalHome;
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') {
-        renderMechTool(pkgId, '__load__');
-      } else {
-        renderMechTool(pkgId, toolId);
-      }
-    });
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'fas fa-folder-open' }
+        : pkg.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'MECHANICAL DESIGN TOOLS', fn: renderMechanicalHome },
+          { label: pkg.title, fn: () => renderMechPackage(pkgId) },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: `<i class="${tool.icon}"></i>`,
+        toolColor: pkg.color,
+        backFn: () => renderMechPackage(pkgId)
+      });
+    };
   });
 }
 
-function renderMechTool(pkgId, toolId) {
-  const pkg = mechPackages.find(p => p.id === pkgId);
-  const isLoad = toolId === '__load__';
-  const tool = isLoad ? { name:'Load External File', icon:'fas fa-folder-open', toolId:'__load__' } : pkg.tools.find(t => t.toolId === toolId);
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeMT">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrMechMT">MECHANICAL DESIGN TOOLS</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrPkgMT">${pkg.title}</span><span class="sep">›</span>
-        <span class="current">${tool.name.toUpperCase()}</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon" style="color:${pkg.color}; border-color:${pkg.color}40"><i class="${tool.icon}"></i></div>
-          <span class="tool-title-text">${tool.name}</span>
-        </div>
-        <button class="back-btn" id="backToPkgMT"><i class="fas fa-arrow-left"></i> Back to ${pkg.title}</button>
-      </div>
-      <div class="tool-body">
-        <div style="text-align:center; padding:3rem 1rem;">
-          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
-          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
-            No built-in content — load the external tool file below
-          </div>
-          <div class="ext-loader-bar" style="margin-bottom:0">
-            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
-            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${toolId}.html">
-            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-            <span class="ext-loader-error" id="extLoaderError"></span>
-          </div>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backToPkgMT').onclick = () => renderMechPackage(pkgId);
-  document.getElementById('bcrHomeMT').onclick = renderHome;
-  document.getElementById('bcrMechMT').onclick = renderMechanicalHome;
-  document.getElementById('bcrPkgMT').onclick = () => renderMechPackage(pkgId);
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
-
-
-function renderGenericTool(discId, toolId, tools, color, backFn) {
-  const tool = tools.find(t => t.toolId === toolId);
-  const discLabel = discId === 'electrical' ? 'ELECTRICAL DESIGN TOOLS' : 'MECHANICAL DESIGN TOOLS';
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeG">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrDiscG">${discLabel}</span><span class="sep">›</span>
-        <span class="current">${tool.name.toUpperCase()}</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon" style="color:${color}; border-color:${color.replace('var(--','').replace(')','')};"><i class="${tool.icon}"></i></div>
-          <span class="tool-title-text">${tool.name}</span>
-        </div>
-        <button class="back-btn" id="backToDiscG"><i class="fas fa-arrow-left"></i> Back</button>
-      </div>
-      <div class="tool-body">
-        <div style="text-align:center; padding:3rem 1rem;">
-          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
-          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
-            No built-in content — load the external tool file below
-          </div>
-          <div class="ext-loader-bar" style="margin-bottom:0">
-            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
-            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${toolId}.html">
-            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-            <span class="ext-loader-error" id="extLoaderError"></span>
-          </div>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backToDiscG').onclick = backFn;
-  document.getElementById('bcrHomeG').onclick = renderHome;
-  document.getElementById('bcrDiscG').onclick = backFn;
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
-
-function renderGenericLoadTool(discId, discLabel, backFn) {
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeGL">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrDiscGL">${discLabel}</span><span class="sep">›</span>
-        <span class="current">LOAD EXTERNAL FILE</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon"><i class="fas fa-folder-open"></i></div>
-          <span class="tool-title-text">Load External File</span>
-        </div>
-        <button class="back-btn" id="backToDiscGL"><i class="fas fa-arrow-left"></i> Back</button>
-      </div>
-      <div class="tool-body">
-        <div class="ext-loader-bar" style="margin-bottom:0">
-          <span class="ext-loader-label"><i class="fas fa-file-code"></i> FILE PATH / URL</span>
-          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tool.html or https://…">
-          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-          <span class="ext-loader-error" id="extLoaderError"></span>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backToDiscGL').onclick = backFn;
-  document.getElementById('bcrHomeGL').onclick = renderHome;
-  document.getElementById('bcrDiscGL').onclick = backFn;
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
+// ═══════════════════════════════════════════════════════════════
+// ICT
+// ═══════════════════════════════════════════════════════════════
 
 function renderICTHome() {
   app.innerHTML = `
     <div class="home-header" style="padding-top:2rem">
       <div class="breadcrumb" style="justify-content:center; margin-bottom:1.5rem">
-        <span style="cursor:pointer; color:var(--text-dim)" id="breadHome">MEP DESIGN PLATFORM</span>
+        <span class="bread-link" id="bcrHome">MEP DESIGN PLATFORM</span>
         <span class="sep">›</span>
         <span class="current">ICT DESIGN TOOLS</span>
       </div>
       <h1 class="home-title" style="font-size:2.4rem">ICT DESIGN TOOLS</h1>
       <p class="home-sub">Networks &nbsp;·&nbsp; Security &nbsp;·&nbsp; PA/AV Specialized Toolkits</p>
-      <div style="display:flex; justify-content:center; margin-bottom:1.2rem">
-        <button id="btnMepHomeICT" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,120,40,0.08);border:1px solid rgba(255,120,40,0.45);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;padding:7px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.2s">
-          <i class="fas fa-house"></i> MEP DESIGN PLATFORM
-        </button>
+      <div style="display:flex;justify-content:center;margin-bottom:1.2rem">
+        <button class="mep-home-btn" id="btnMepHome"><i class="fas fa-house"></i> MEP DESIGN PLATFORM</button>
       </div>
       <div class="home-divider"><span>SELECT PACKAGE</span></div>
     </div>
-
     <div class="category-grid">
-      ${categories.map(cat => `
+      ${ictCategories.map(cat => `
         <div class="category-card" data-cat="${cat.id}" style="--cat-color:${cat.color}">
           <div class="cat-corner-glow"></div>
           <div class="cat-tag">${cat.tag}</div>
-          <div class="main-icon-wrap">
-            ${cat.icon}
-          </div>
+          <div class="main-icon-wrap">${cat.icon}</div>
           <div class="cat-title">${cat.title}</div>
           <div class="cat-desc">${cat.desc}</div>
-          <div class="sub-icons">
-            ${cat.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}
-          </div>
-        </div>
-      `).join('')}
+          <div class="sub-icons">${cat.subIcons.map(ic => `<div class="sub-icon"><i class="fas ${ic}"></i></div>`).join('')}</div>
+        </div>`).join('')}
     </div>
-
-    <div class="footer"><span>■</span> ICT DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>
-  `;
-  document.getElementById('breadHome').onclick = renderHome;
-  document.getElementById('btnMepHomeICT').onclick = renderHome;
-  document.querySelectorAll('.category-card').forEach(card => {
-    card.addEventListener('click', () => renderPackage(card.getAttribute('data-cat')));
+    <div class="footer"><span>■</span> ICT DESIGN TOOLS &nbsp;·&nbsp; SELECT A PACKAGE TO BEGIN</div>`;
+  document.getElementById('bcrHome').onclick = renderHome;
+  document.getElementById('btnMepHome').onclick = renderHome;
+  document.querySelectorAll('[data-cat]').forEach(card => {
+    card.onclick = () => renderICTPackage(card.getAttribute('data-cat'));
   });
 }
 
-function renderPackage(catId) {
-  const cat = categories.find(c => c.id === catId);
+function renderICTPackage(catId) {
+  const cat = ictCategories.find(c => c.id === catId);
   app.innerHTML = `
     <div class="package-wrap">
       <div class="breadcrumb">
@@ -1638,13 +2704,13 @@ function renderPackage(catId) {
       </div>
       <div class="pkg-header">
         <div class="pkg-title-row">
-          <div class="pkg-icon-box ${cat.iconClass}">${cat.icon}</div>
+          <div class="pkg-icon-box ${cat.iconClass}" style="color:${cat.color}; border-color:${cat.color}55; background:${cat.color}12">${cat.icon}</div>
           <div>
             <div class="pkg-name">${cat.title}</div>
             <div class="pkg-count">${cat.tools.length} TOOLS AVAILABLE</div>
           </div>
         </div>
-        <button class="back-btn" id="backHomeBtn"><i class="fas fa-arrow-left"></i> ICT Design Tools</button>
+        <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i> ICT Design Tools</button>
       </div>
       <div class="tool-icons-grid">
         ${cat.tools.map((t, i) => `
@@ -1652,147 +2718,267 @@ function renderPackage(catId) {
             <div class="tool-big-icon"><i class="${t.icon}"></i></div>
             <h3>${t.name}</h3>
             <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
-          </div>
-        `).join('')}
-        <div class="tool-icon-card tool-icon-card--load" data-tool="__load__" style="animation-delay:${cat.tools.length*0.08}s; border-style:dashed; --card-color:${cat.color}">
+          </div>`).join('')}
+        <div class="tool-icon-card" data-tool="__load__" style="animation-delay:${cat.tools.length*0.08}s; border-style:dashed; --card-color:${cat.color}">
           <div class="tool-big-icon"><i class="fas fa-folder-open"></i></div>
           <h3>Load External File</h3>
           <span class="tool-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
       </div>
-      <div class="footer"><span>■</span> SELECT A TOOL TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backHomeBtn').onclick = renderICTHome;
+      <div class="footer"><span>■</span> ${cat.title} &nbsp;·&nbsp; SELECT A TOOL TO BEGIN</div>
+    </div>`;
   document.getElementById('bcrHome').onclick = renderHome;
   document.getElementById('bcrICT').onclick = renderICTHome;
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  document.querySelectorAll('.tool-icon-card').forEach(card => {
-    card.addEventListener('click', () => {
+  document.getElementById('backBtn').onclick = renderICTHome;
+  document.querySelectorAll('[data-tool]').forEach(card => {
+    card.onclick = () => {
       const toolId = card.getAttribute('data-tool');
-      if (toolId === '__load__') renderLoadTool(catId);
-      else renderTool(catId, toolId);
-    });
-  });
-}
-
-function renderTool(catId, toolId) {
-  const cat = categories.find(c => c.id === catId);
-  const tool = cat.tools.find(t => t.toolId === toolId);
-
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHome2">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrICT2">ICT DESIGN TOOLS</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrPkg2">${cat.title}</span><span class="sep">›</span>
-        <span class="current">${tool.name.toUpperCase()}</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon" style="color:${cat.color}; border-color:${cat.color}40"><i class="${tool.icon}"></i></div>
-          <span class="tool-title-text">${tool.name}</span>
-        </div>
-        <button class="back-btn" id="backToPackage"><i class="fas fa-arrow-left"></i> Back to ${cat.title}</button>
-      </div>
-      <div class="tool-body">
-        <div style="text-align:center; padding:3rem 1rem;">
-          <div style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted)"><i class="fas fa-folder-open"></i></div>
-          <div style="font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; color:var(--text-dim); text-transform:uppercase; margin-bottom:2rem">
-            No built-in content — load the external tool file below
-          </div>
-          <div class="ext-loader-bar" style="margin-bottom:0">
-            <span class="ext-loader-label"><i class="fas fa-file-code"></i> TOOL FILE</span>
-            <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./tools/${tool.toolId}.html">
-            <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-            <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-            <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-            <span class="ext-loader-error" id="extLoaderError"></span>
-          </div>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-
-  document.getElementById('backToPackage').onclick = () => renderPackage(catId);
-  document.getElementById('bcrHome2').onclick = renderHome;
-  document.getElementById('bcrICT2').onclick = renderICTHome;
-  document.getElementById('bcrPkg2').onclick = () => renderPackage(catId);
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
-
-function renderLoadTool(catId) {
-  const cat = categories.find(c => c.id === catId);
-  app.innerHTML = `
-    <div class="tool-container">
-      <div class="breadcrumb">
-        <span class="bread-link" id="bcrHomeL">MEP PLATFORM</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrICTL">ICT DESIGN TOOLS</span><span class="sep">›</span>
-        <span class="bread-link" id="bcrPkgL">${cat.title}</span><span class="sep">›</span>
-        <span class="current">LOAD EXTERNAL FILE</span>
-      </div>
-      <div class="tool-header">
-        <div class="tool-title-row">
-          <div class="tool-title-icon" style="color:${cat.color}; border-color:${cat.color}40"><i class="fas fa-folder-open"></i></div>
-          <span class="tool-title-text">Load External File</span>
-        </div>
-        <button class="back-btn" id="backToPackage"><i class="fas fa-arrow-left"></i> Back to ${cat.title}</button>
-      </div>
-      <div class="tool-body">
-        <div class="ext-loader-bar" style="margin-bottom:0">
-          <span class="ext-loader-label"><i class="fas fa-file-code"></i> FILE PATH / URL</span>
-          <input class="ext-loader-input" id="extPathInput" type="text" placeholder="Enter path or URL — e.g. ./bandwidth.html or https://…">
-          <button class="ext-loader-file-btn" id="extFilePickBtn"><i class="fas fa-upload"></i> Browse</button>
-          <input type="file" id="extFilePicker" accept=".html,.htm" style="display:none">
-          <button class="ext-loader-btn" id="extLoadBtn"><i class="fas fa-play"></i> OPEN</button>
-          <span class="ext-loader-error" id="extLoaderError"></span>
-        </div>
-      </div>
-      <div class="footer"><span>■</span> LOAD EXTERNAL TOOL FILE TO BEGIN</div>
-    </div>
-  `;
-  document.getElementById('backToPackage').onclick = () => renderPackage(catId);
-  document.getElementById('bcrHomeL').onclick = renderHome;
-  document.getElementById('bcrICTL').onclick = renderICTHome;
-  document.getElementById('bcrPkgL').onclick = () => renderPackage(catId);
-  document.querySelectorAll('.bread-link').forEach(el => el.style.cursor = 'pointer');
-  wireExtLoader();
-}
-
-function wireExtLoader() {
-  const filePickBtn  = document.getElementById('extFilePickBtn');
-  const filePicker   = document.getElementById('extFilePicker');
-  const pathInput    = document.getElementById('extPathInput');
-  const loadBtn      = document.getElementById('extLoadBtn');
-  const errorEl      = document.getElementById('extLoaderError');
-
-  filePickBtn.addEventListener('click', () => filePicker.click());
-
-  filePicker.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      pathInput.value = file.name;
-      openExternalToolModal(ev.target.result, file.name, true);
+      const tool = toolId === '__load__'
+        ? { name:'Load External File', icon:'fas fa-folder-open' }
+        : cat.tools.find(t => t.toolId === toolId);
+      loaderPage({
+        breadcrumbs: [
+          { label:'MEP PLATFORM', fn: renderHome },
+          { label:'ICT DESIGN TOOLS', fn: renderICTHome },
+          { label: cat.title, fn: () => renderICTPackage(catId) },
+          { label: toolId === '__load__' ? 'LOAD EXTERNAL FILE' : tool.name.toUpperCase() }
+        ],
+        toolName: tool.name,
+        toolIcon: `<i class="${tool.icon}"></i>`,
+        toolColor: cat.color,
+        backFn: () => renderICTPackage(catId)
+      });
     };
-    reader.readAsText(file);
-    filePicker.value = '';
   });
-
-  loadBtn.addEventListener('click', () => {
-    const val = pathInput.value.trim();
-    errorEl.style.display = 'none';
-    if (!val) { errorEl.textContent = '⚠ Enter a file path or URL first.'; errorEl.style.display = 'block'; return; }
-    openExternalToolModal(val, val, false);
-  });
-
-  pathInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 renderHome();
 </script>
+</template>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ── STORAGE KEYS ── */
+  var K_PHASE   = 'mep_master_phase';
+  var K_MATRIX  = 'mep_matrix_end';
+  var K_SESSION = 'mep_session_end';
+  var K_MARIO   = 'mep_mario_end';
+
+  var DUR_MATRIX  = 60 * 1000;       // Phase 1: 1 minute
+  var DUR_SESSION = 10 * 60 * 1000;  // Phase 2: 10 minutes
+  var DUR_MARIO   = 60 * 1000;       // Phase 3: 1 minute
+
+  /* ── DOM REFS ── */
+  var views = {
+    matrix:      document.getElementById('viewMatrix'),
+    mep_login:   document.getElementById('viewLogin'),
+    mep_session: document.getElementById('viewMep'),
+    mario:       document.getElementById('viewMario'),
+    static:      document.getElementById('viewStatic')
+  };
+  var sessionBadge   = document.getElementById('sessionBadge');
+  var sessionTimeTxt = document.getElementById('sessionTimeText');
+  var frameMatrix = document.getElementById('frameMatrix');
+  var frameMep    = document.getElementById('frameMep');
+  var frameMario  = document.getElementById('frameMario');
+  var loginForm   = document.getElementById('loginForm');
+  var loginCard   = document.getElementById('loginCard');
+  var loginError  = document.getElementById('loginError');
+  var resetBtn    = document.getElementById('resetBtn');
+
+  var builtMatrix = false, builtMep = false, builtMario = false, builtStatic = false;
+  var currentRendered = null;
+
+  /* ── HELPERS ── */
+  function now(){ return Date.now(); }
+  function getNum(key){
+    var v = localStorage.getItem(key);
+    return v ? parseInt(v, 10) : 0;
+  }
+  function getPhase(){ return localStorage.getItem(K_PHASE); }
+  function setPhase(p){ localStorage.setItem(K_PHASE, p); }
+
+  function docFromTemplate(templateId, headExtra){
+    var content = document.getElementById(templateId).innerHTML;
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+      (headExtra || '') + '</head><body>' + content + '</body></html>';
+  }
+
+  function teardown(frameEl){
+    frameEl.removeAttribute('srcdoc');
+    frameEl.src = 'about:blank';
+  }
+
+  /* ── INITIALIZE STATE (first ever visit) ── */
+  if (!getPhase()){
+    setPhase('matrix');
+    localStorage.setItem(K_MATRIX, String(now() + DUR_MATRIX));
+  }
+
+  /* ── RESOLVE CASCADING EXPIRIES (handles refresh / long absence) ── */
+  function resolvePhase(){
+    var phase = getPhase();
+    var changed = true;
+    while (changed){
+      changed = false;
+      var t = now();
+      if (phase === 'matrix'){
+        if (t >= getNum(K_MATRIX)){
+          phase = 'mep_login';
+          setPhase(phase);
+          changed = true;
+        }
+      } else if (phase === 'mep_session'){
+        if (t >= getNum(K_SESSION)){
+          phase = 'mario';
+          localStorage.setItem(K_MARIO, String(t + DUR_MARIO));
+          setPhase(phase);
+          changed = true;
+        }
+      } else if (phase === 'mario'){
+        if (t >= getNum(K_MARIO)){
+          phase = 'static';
+          setPhase(phase);
+          changed = true;
+        }
+      }
+      // 'mep_login' waits for user action; 'static' is terminal
+    }
+    return phase;
+  }
+
+  /* ── BUILDERS ── */
+  function buildMatrixFrame(){
+    if (builtMatrix) return;
+    builtMatrix = true;
+    frameMatrix.srcdoc = docFromTemplate('tplMatrix');
+  }
+  function buildMepFrame(){
+    if (builtMep) return;
+    builtMep = true;
+    var headExtra = '<title>MEP Design Platform</title>';
+    frameMep.srcdoc = docFromTemplate('tplMep', headExtra);
+  }
+  function buildMarioFrame(){
+    if (builtMario) return;
+    builtMario = true;
+    frameMario.srcdoc = docFromTemplate('tplMario');
+  }
+
+  /* ── STATIC NOISE ANIMATION ── */
+  var staticCtx = null, staticRAF = null;
+  function buildStatic(){
+    if (builtStatic) return;
+    builtStatic = true;
+    var canvas = document.getElementById('staticCanvas');
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    staticCtx = canvas.getContext('2d');
+    function draw(){
+      var w = canvas.width, h = canvas.height;
+      var imageData = staticCtx.createImageData(w, h);
+      var buf = imageData.data;
+      for (var i = 0; i < buf.length; i += 4){
+        var shade = Math.random() * 255;
+        buf[i] = shade; buf[i+1] = shade; buf[i+2] = shade; buf[i+3] = 255;
+      }
+      staticCtx.putImageData(imageData, 0, 0);
+      staticRAF = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  /* ── RENDER / VIEW SWITCH ── */
+  function showPhase(phase){
+    if (phase === currentRendered) return;
+
+    // Tear down whatever we are leaving
+    if (currentRendered === 'matrix') teardown(frameMatrix);
+    if (currentRendered === 'mep_session') { teardown(frameMep); sessionBadge.style.display = 'none'; sessionBadge.classList.remove('warn'); }
+    if (currentRendered === 'mario') teardown(frameMario);
+
+    for (var k in views){ views[k].classList.remove('active'); }
+
+    if (phase === 'matrix'){
+      buildMatrixFrame();
+      views.matrix.classList.add('active');
+    } else if (phase === 'mep_login'){
+      views.mep_login.classList.add('active');
+    } else if (phase === 'mep_session'){
+      buildMepFrame();
+      views.mep_session.classList.add('active');
+      sessionBadge.style.display = 'flex';
+    } else if (phase === 'mario'){
+      buildMarioFrame();
+      views.mario.classList.add('active');
+    } else if (phase === 'static'){
+      buildStatic();
+      views.static.classList.add('active');
+    }
+    currentRendered = phase;
+  }
+
+  /* ── LOGIN HANDLER ── */
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var user = document.getElementById('loginUser').value.trim();
+    var pass = document.getElementById('loginPass').value;
+    if (user === 'admin' && pass === 'mep2024'){
+      var endTime = now() + DUR_SESSION;
+      localStorage.setItem(K_SESSION, String(endTime));
+      setPhase('mep_session');
+      showPhase('mep_session');
+      updateSessionBadge();
+    } else {
+      loginError.style.display = 'block';
+      loginCard.classList.remove('shake');
+      void loginCard.offsetWidth;
+      loginCard.classList.add('shake');
+    }
+  });
+
+  /* ── RESET (visible only on static screen) ── */
+  resetBtn.addEventListener('click', function(){
+    localStorage.removeItem(K_PHASE);
+    localStorage.removeItem(K_MATRIX);
+    localStorage.removeItem(K_SESSION);
+    localStorage.removeItem(K_MARIO);
+    localStorage.removeItem('mep_matrix_end');
+    location.reload();
+  });
+
+  /* ── SESSION BADGE TICK ── */
+  function updateSessionBadge(){
+    var remain = Math.max(0, getNum(K_SESSION) - now());
+    var mins = Math.floor(remain / 60000);
+    var secs = Math.floor((remain % 60000) / 1000);
+    sessionTimeTxt.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    if (remain < 60000){ sessionBadge.classList.add('warn'); }
+    else { sessionBadge.classList.remove('warn'); }
+  }
+
+  /* ── MAIN LOOP ── */
+  function tick(){
+    var phase = resolvePhase();
+    showPhase(phase);
+    if (phase === 'mep_session') updateSessionBadge();
+  }
+
+  tick();
+  setInterval(tick, 1000);
+
+})();
+</script>
+
 </body>
 </html>
